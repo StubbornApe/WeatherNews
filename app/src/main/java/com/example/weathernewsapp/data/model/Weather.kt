@@ -26,11 +26,13 @@ package com.example.weathernewsapp.data.model
  */
 data class Weather(
     val cityName: String,
-    val temperatureText: String,             // 保留:DTO 直接拼好的文本(兼容旧代码)
-    val temperatureCelsius: Double = 0.0,    // ⭐ Day 10 新增:摄氏度数值,用于单位换算
+    // 保留:DTO 直接拼好的文本(兼容旧代码)
+    val temperatureText: String,
+    // ⭐ Day 10 新增:摄氏度数值,用于单位换算
+    val temperatureCelsius: Double = 0.0,
     val weatherCode: Int,
     val weatherDesc: String,
     val windSpeedText: String,
     val updateTime: String,
-    val isFromCache: Boolean = false
+    val isFromCache: Boolean = false,
 )

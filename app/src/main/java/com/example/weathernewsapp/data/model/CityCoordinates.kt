@@ -24,7 +24,7 @@ package com.example.weathernewsapp.data.model
 data class CityCoordinates(
     val cityName: String,
     val lat: Double,
-    val lng: Double
+    val lng: Double,
 ) {
     companion object {
         /**
@@ -33,14 +33,15 @@ data class CityCoordinates(
          * 这些经纬度来自 Open-Meteo 的 geocoding API 公开数据,精度到小数点后 4 位
          * (约 11 米精度,天气查询完全够用)。
          */
-        private val CITY_MAP: Map<String, CityCoordinates> = listOf(
-            CityCoordinates("北京", 39.9042, 116.4074),
-            CityCoordinates("上海", 31.2304, 121.4737),
-            CityCoordinates("广州", 23.1291, 113.2644),
-            CityCoordinates("深圳", 22.5431, 114.0579),
-            CityCoordinates("成都", 30.5728, 104.0668),
-            CityCoordinates("杭州", 30.2741, 120.1551)
-        ).associateBy { it.cityName }
+        private val CITY_MAP: Map<String, CityCoordinates> =
+            listOf(
+                CityCoordinates("北京", 39.9042, 116.4074),
+                CityCoordinates("上海", 31.2304, 121.4737),
+                CityCoordinates("广州", 23.1291, 113.2644),
+                CityCoordinates("深圳", 22.5431, 114.0579),
+                CityCoordinates("成都", 30.5728, 104.0668),
+                CityCoordinates("杭州", 30.2741, 120.1551),
+            ).associateBy { it.cityName }
 
         /** 支持的城市名列表,设置页的城市选择器可以直接用 */
         val SUPPORTED_CITIES: List<String> = CITY_MAP.keys.toList()
@@ -56,7 +57,6 @@ data class CityCoordinates(
          * 根据城市名查经纬度,找不到时返回北京的坐标(兜底默认值)。
          * 这样即使用户输入了不支持的城市,也不会崩,只是查的是北京天气。
          */
-        fun fromCityNameOrDefault(cityName: String): CityCoordinates =
-            CITY_MAP[cityName] ?: CITY_MAP.getValue("北京")
+        fun fromCityNameOrDefault(cityName: String): CityCoordinates = CITY_MAP[cityName] ?: CITY_MAP.getValue("北京")
     }
 }

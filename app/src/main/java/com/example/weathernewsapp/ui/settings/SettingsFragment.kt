@@ -12,15 +12,16 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import com.example.weathernewsapp.R
 import com.example.weathernewsapp.data.datastore.SettingsDataStore
 import com.example.weathernewsapp.data.model.CityCoordinates
 import com.example.weathernewsapp.data.model.TempUnit
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
+
 /**
  * ═══════════════════════════════════════════════════════════════════════════
  * SettingsFragment —— 设置页
@@ -80,12 +81,15 @@ class SettingsFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         return inflater.inflate(R.layout.fragment_settings, container, false)
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
         super.onViewCreated(view, savedInstanceState)
 
         // 1. findViewById 绑定视图
@@ -114,36 +118,39 @@ class SettingsFragment : Fragment() {
         val cities = CityCoordinates.SUPPORTED_CITIES
 
         // ArrayAdapter:Spinner 的标准适配器,把 List<String> 渲染成下拉项
-        val adapter = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_spinner_item,          // 选中时的布局
-            cities
-        ).apply {
-            // 下拉列表里每一行的布局
-            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        }
+        val adapter =
+            ArrayAdapter(
+                requireContext(),
+                // 选中时的布局
+                android.R.layout.simple_spinner_item,
+                cities,
+            ).apply {
+                // 下拉列表里每一行的布局
+                setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            }
 
         spinnerCity?.adapter = adapter
 
         // 注册选择监听器
-        spinnerCity?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>?,
-                view: View?,
-                position: Int,
-                id: Long
-            ) {
-                // isInitialized = false 时忽略(这是初始设值触发的回调)
-                if (!isInitialized) return
+        spinnerCity?.onItemSelectedListener =
+            object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long,
+                ) {
+                    // isInitialized = false 时忽略(这是初始设值触发的回调)
+                    if (!isInitialized) return
 
-                val selectedCity = cities[position]
-                saveDefaultCity(selectedCity)
-            }
+                    val selectedCity = cities[position]
+                    saveDefaultCity(selectedCity)
+                }
 
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                // 用户没选任何东西时不处理(Spinner 始终有一个选中项)
+                override fun onNothingSelected(parent: AdapterView<*>?) {
+                    // 用户没选任何东西时不处理(Spinner 始终有一个选中项)
+                }
             }
-        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -165,11 +172,12 @@ class SettingsFragment : Fragment() {
         radioGroupTempUnit?.setOnCheckedChangeListener { _, checkedId ->
             if (!isInitialized) return@setOnCheckedChangeListener
 
-            val unit = when (checkedId) {
-                R.id.radioCelsius    -> TempUnit.CELSIUS
-                R.id.radioFahrenheit -> TempUnit.FAHRENHEIT
-                else                 -> TempUnit.CELSIUS   // 兜底
-            }
+            val unit =
+                when (checkedId) {
+                    R.id.radioCelsius -> TempUnit.CELSIUS
+                    R.id.radioFahrenheit -> TempUnit.FAHRENHEIT
+                    else -> TempUnit.CELSIUS // 兜底
+                }
             saveTempUnit(unit)
         }
     }
@@ -207,10 +215,11 @@ class SettingsFragment : Fragment() {
             switchDarkMode?.isChecked = settings.darkMode
 
             // ── 3. 填充温度单位 RadioGroup ──
-            val radioId = when (settings.tempUnit) {
-                TempUnit.CELSIUS    -> R.id.radioCelsius
-                TempUnit.FAHRENHEIT -> R.id.radioFahrenheit
-            }
+            val radioId =
+                when (settings.tempUnit) {
+                    TempUnit.CELSIUS -> R.id.radioCelsius
+                    TempUnit.FAHRENHEIT -> R.id.radioFahrenheit
+                }
             radioGroupTempUnit?.check(radioId)
 
             // ⭐ 所有 UI 初始化完成后,才把标志位设为 true
@@ -248,11 +257,12 @@ class SettingsFragment : Fragment() {
         }
 
         // 再切换主题(这行不需要在协程里,它是同步 API)
-        val mode = if (enabled) {
-            AppCompatDelegate.MODE_NIGHT_YES
-        } else {
-            AppCompatDelegate.MODE_NIGHT_NO
-        }
+        val mode =
+            if (enabled) {
+                AppCompatDelegate.MODE_NIGHT_YES
+            } else {
+                AppCompatDelegate.MODE_NIGHT_NO
+            }
         AppCompatDelegate.setDefaultNightMode(mode)
     }
 

@@ -15,14 +15,14 @@ package com.example.weathernewsapp.common
  *   · Loading:请求进行中(暂时不发射,预留给 Flow 时使用)
  *   · Success:请求成功,携带数据
  *   · Error:请求失败,携带 ErrorType(分类的错误)+ 可选原始异常
+ *
+ * 【sealed class 是什么?】
+ *   · out T:声明协变(covariant)—— 允许 NetworkResult<Weather> 赋给 NetworkResult<Any>
+ *   · 编译器保证:所有子类都在同一文件内,when 分支能强制穷举
+ *   · 相比 enum 更强大:每个子类可以有自己的属性和构造函数
  * ═══════════════════════════════════════════════════════════════════════════
  */
-// sealed class = "密封类"
-//   · out T:声明协变(covariant)—— 允许 NetworkResult<Weather> 赋给 NetworkResult<Any>
-//   · 编译器保证:所有子类都在同一文件内,when 分支能强制穷举
-//   · 相比 enum 更强大:每个子类可以有自己的属性和构造函数
 sealed class NetworkResult<out T> {
-
     // object 单例子类:表示"没有额外数据"的状态
     //   · Loading 不需要携带数据,用 object 只有一个实例,内存最省
     //   · NetworkResult<Nothing>:Nothing 是所有类型的子类,
@@ -50,41 +50,29 @@ sealed class NetworkResult<out T> {
  * 把"技术层的异常类型"翻译成"业务层能看懂的错误类别",
  * UI 层根据类型显示不同提示 / 图标 / 重试策略。
  * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * 【sealed class 里可以带一个"抽象属性"(userMessage)—— 每个子类必须提供】
+ *   · 这样所有 ErrorType 都保证有"用户可读文案",避免遗漏
+ *   · UI 层只需 errorType.userMessage 就能拿到显示内容
+ * ═══════════════════════════════════════════════════════════════════════════
  */
-// sealed class 里可以带一个"抽象属性"(userMessage)—— 每个子类必须提供
-//   · 这样所有 ErrorType 都保证有"用户可读文案",避免遗漏
-//   · UI 层只需 errorType.userMessage 就能拿到显示内容
 sealed class ErrorType(val userMessage: String) {
-
     /** 无网络 / DNS 失败 / 连接失败 */
-    // object 单例子类:不需要额外参数的错误类型
-    //   · NoNetwork 就是"网络不可用",任何实例都长一样,无参
-    //   · 类似于 enum 的"常量值"
     object NoNetwork : ErrorType("网络不可用,请检查连接")
 
     /** 请求超时 */
-    // 同样是无参单例
     object Timeout : ErrorType("请求超时,请稍后重试")
 
     /** 服务端 5xx */
-    // data class 需要附带信息的错误类型
-    //   · Server(500) / Server(503) / Server(504) 都是不同实例
-    //   · code 通过字符串模板 "$code" 插入 userMessage,让文案更具体
     data class Server(val code: Int) : ErrorType("服务器异常($code)")
 
     /** 客户端 4xx */
-    // Client 与 Server 类似,只是范围不同(4xx vs 5xx)
-    //   · 常见:Client(404) / Client(401) / Client(403)
     data class Client(val code: Int) : ErrorType("请求错误($code)")
 
     /** JSON 解析失败 */
-    // 无参单例
     object Parse : ErrorType("数据格式异常")
 
     /** 未知(兜底) */
-    // 兜底类型:携带一个 message?(可空的 String)
-    //   · Elvis 操作符 ?::表示"如果左边是 null,用右边"
-    //   · 即:message 若为 null,userMessage 就是 "未知错误",否则就是 message 本身
     data class Unknown(val message: String?) : ErrorType(message ?: "未知错误")
 }
 
@@ -99,17 +87,17 @@ sealed class ErrorType(val userMessage: String) {
 /**
  * 便捷扩展:把 Throwable 映射成 ErrorType。
  * 供 Repository 层 catch 时统一转换。
+ *
+ * 【扩展函数的工作原理】
+ *   · fun Throwable.xxx():"这是 Throwable 的扩展方法"
+ *   · 调用方式:someException.toErrorType(),就像 Throwable 自带的方法一样
+ *   · 实际底层:Kotlin 生成一个静态方法,把 Throwable 作为第一个参数
  */
-// 扩展函数:给 Throwable 类添加一个新方法 .toErrorType()
-//   · fun Throwable.xxx():"这是 Throwable 的扩展方法"
-//   · 调用方式:someException.toErrorType(),就像 Throwable 自带的方法一样
-//   · 实际底层:Kotlin 生成一个静态方法,把 Throwable 作为第一个参数
 fun Throwable.toErrorType(): ErrorType =
 // = + when 表达式:整个函数体就是 when 表达式的结果
 //   · when (this) 表示"根据 this(即当前 Throwable)的实际类型判断"
     //   · Kotlin 里 when 是表达式,可以直接作为函数返回值
     when (this) {
-
         // is 关键字:类型判断 + 智能转换
         //   · 匹配"这个 Throwable 是不是 SocketTimeoutException 的实例"
         //   · 匹配成功后,this 在这个分支里自动被视为 SocketTimeoutException 类型
@@ -118,19 +106,19 @@ fun Throwable.toErrorType(): ErrorType =
 
         // 匹配 DNS 解析失败(UnknownHostException 也是 IOException 子类)
         //   · 场景:飞行模式 / 无网 / DNS 服务器挂了
-        is java.net.UnknownHostException  -> ErrorType.NoNetwork
+        is java.net.UnknownHostException -> ErrorType.NoNetwork
 
         // 匹配所有其它 IOException(网络断开 / 连接被重置等)
         //   · ⚠️ 这行必须放在 SocketTimeoutException 和 UnknownHostException 之后!
         //   · 因为它们是 IOException 的子类,若 IOException 放前面会"截胡"子类分支
         //   · when 从上到下匹配,命中就停 —— 更具体的类型必须放上面
-        is java.io.IOException            -> ErrorType.NoNetwork
+        is java.io.IOException -> ErrorType.NoNetwork
 
         // 匹配 Retrofit 的 HttpException(非 2xx 响应)
         //   · 匹配后,进入一个嵌套 when 判断具体状态码
         //   · this.code() 是 HttpException 的方法,返回 HTTP 状态码
         is retrofit2.HttpException -> {
-            val code = this.code()             // 局部变量:保存状态码,避免重复调用
+            val code = this.code() // 局部变量:保存状态码,避免重复调用
             when (code) {
                 // in 400..499:区间匹配,表示 code 在 400~499(闭区间)
                 //   · 常见:400 Bad Request / 401 Unauthorized / 404 Not Found / 429 Too Many Requests
@@ -141,7 +129,7 @@ fun Throwable.toErrorType(): ErrorType =
                 in 500..599 -> ErrorType.Server(code)
 
                 // 其它状态码(如 1xx / 3xx,理论上 Retrofit 不会抛)兜底
-                else        -> ErrorType.Unknown("HTTP $code")
+                else -> ErrorType.Unknown("HTTP $code")
             }
         }
 

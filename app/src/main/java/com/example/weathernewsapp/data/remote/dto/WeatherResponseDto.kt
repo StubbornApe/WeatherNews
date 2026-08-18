@@ -1,7 +1,7 @@
 package com.example.weathernewsapp.data.remote.dto
 
 // ============ import ============
-import com.google.gson.annotations.SerializedName   // Gson 字段映射注解
+import com.google.gson.annotations.SerializedName // Gson 字段映射注解
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════
@@ -25,20 +25,20 @@ import com.google.gson.annotations.SerializedName   // Gson 字段映射注解
  * ═══════════════════════════════════════════════════════════════════════════
  */
 data class WeatherResponseDto(
-    @SerializedName("latitude")           val latitude: Double,
-    @SerializedName("longitude")          val longitude: Double,
-    @SerializedName("timezone")           val timezone: String,
-    @SerializedName("elevation")          val elevation: Double,
-    @SerializedName("current_units")      val currentUnits: CurrentUnitsDto,
-    @SerializedName("current")            val current: CurrentDto
+    @SerializedName("latitude") val latitude: Double,
+    @SerializedName("longitude") val longitude: Double,
+    @SerializedName("timezone") val timezone: String,
+    @SerializedName("elevation") val elevation: Double,
+    @SerializedName("current_units") val currentUnits: CurrentUnitsDto,
+    @SerializedName("current") val current: CurrentDto,
 )
 
 /** 各字段的单位(温度=°C,风速=km/h,等) */
 data class CurrentUnitsDto(
-    @SerializedName("time")            val time: String,
-    @SerializedName("temperature_2m")  val temperature: String,
-    @SerializedName("weather_code")    val weatherCode: String,
-    @SerializedName("wind_speed_10m")  val windSpeed: String
+    @SerializedName("time") val time: String,
+    @SerializedName("temperature_2m") val temperature: String,
+    @SerializedName("weather_code") val weatherCode: String,
+    @SerializedName("wind_speed_10m") val windSpeed: String,
 )
 
 /**
@@ -48,9 +48,11 @@ data class CurrentUnitsDto(
  * Kotlin 侧统一简化为 temperature / windSpeed。
  */
 data class CurrentDto(
-    @SerializedName("time")            val time: String,       // ISO8601:"2026-07-28T10:00"
-    @SerializedName("interval")        val interval: Int,      // 数据刷新间隔(秒)
-    @SerializedName("temperature_2m")  val temperature: Double,
-    @SerializedName("weather_code")    val weatherCode: Int,
-    @SerializedName("wind_speed_10m")  val windSpeed: Double
+    // ISO8601:"2026-07-28T10:00"
+    @SerializedName("time") val time: String,
+    // 数据刷新间隔(秒)
+    @SerializedName("interval") val interval: Int,
+    @SerializedName("temperature_2m") val temperature: Double,
+    @SerializedName("weather_code") val weatherCode: Int,
+    @SerializedName("wind_speed_10m") val windSpeed: Double,
 )

@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 data class NewsResponseDto(
     @SerializedName("code") val code: Int,
     @SerializedName("msg") val msg: String? = null,
-    @SerializedName("newslist") val newsList: List<NewsItemDto>? = null
+    @SerializedName("newslist") val newsList: List<NewsItemDto>? = null,
 )
 
 data class NewsItemDto(
@@ -15,5 +15,5 @@ data class NewsItemDto(
     @SerializedName("description") val description: String? = null,
     @SerializedName("source") val source: String? = null,
     @SerializedName("picUrl") val picUrl: String? = null,
-    @SerializedName("url") val url: String? = null
+    @SerializedName("url") val url: String? = null,
 )

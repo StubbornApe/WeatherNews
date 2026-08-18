@@ -28,7 +28,8 @@ enum class TempUnit(val symbol: String) {
     CELSIUS("°C"),
 
     /** 华氏度(美国默认) */
-    FAHRENHEIT("°F");
+    FAHRENHEIT("°F"),
+    ;
 
     companion object {
         /**
@@ -41,7 +42,6 @@ enum class TempUnit(val symbol: String) {
          * @param ordinal DataStore 里存的整数序号
          * @return 对应的 TempUnit,序号无效时返回 CELSIUS
          */
-        fun fromOrdinal(ordinal: Int?): TempUnit =
-            TempUnit.entries.getOrNull(ordinal ?: -1) ?: CELSIUS
+        fun fromOrdinal(ordinal: Int?): TempUnit = TempUnit.entries.getOrNull(ordinal ?: -1) ?: CELSIUS
     }
 }

@@ -1,12 +1,12 @@
 package com.example.weathernewsapp.common
 
 // ============ import 分区(按 Android 官方约定:android → androidx → 项目) ============
-import android.content.Context               // Fragment onAttach 的入参类型
-import android.os.Bundle                     // 状态保存/恢复
-import android.util.Log                      // 日志 API
-import android.view.View                     // Fragment 的 View 树
-import androidx.annotation.LayoutRes         // 编译期校验参数必须是 @layout 资源
-import androidx.fragment.app.Fragment        // Jetpack Fragment 基类
+import android.content.Context // Fragment onAttach 的入参类型
+import android.os.Bundle // 状态保存/恢复
+import android.util.Log // 日志 API
+import android.view.View // Fragment 的 View 树
+import androidx.annotation.LayoutRes // 编译期校验参数必须是 @layout 资源
+import androidx.fragment.app.Fragment // Jetpack Fragment 基类
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════
@@ -63,9 +63,8 @@ import androidx.fragment.app.Fragment        // Jetpack Fragment 基类
  * ═══════════════════════════════════════════════════════════════════════════
  */
 open class LifecycleLoggingFragment(
-    @LayoutRes contentLayoutId: Int
+    @LayoutRes contentLayoutId: Int,
 ) : Fragment(contentLayoutId) {
-
     /**
      * Logcat 消息里显示的类名。
      * `open` 允许子类覆写(比如给同一个类的不同实例起不同名字方便区分)。
@@ -86,7 +85,7 @@ open class LifecycleLoggingFragment(
     //   不能访问 view 相关的东西。
     // ═══════════════════════════════════════════════════════════════════
     override fun onAttach(context: Context) {
-        super.onAttach(context)                          // ⚠️ 必须先调 super
+        super.onAttach(context) // ⚠️ 必须先调 super
         Log.d(LC_TAG, "$logTag -> onAttach")
     }
 
@@ -108,7 +107,10 @@ open class LifecycleLoggingFragment(
     //        与 Fragment 实例的 onCreate ~ onDestroy 是两条不同的生命周期
     //        (见 Day05 笔记 Q2)。
     // ═══════════════════════════════════════════════════════════════════
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
         super.onViewCreated(view, savedInstanceState)
         Log.d(LC_TAG, "$logTag -> onViewCreated")
     }
