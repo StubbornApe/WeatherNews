@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ═══════════════════════════════════════════════════════════════
+  fragment_weather.xml —— 天气页布局
+  ═══════════════════════════════════════════════════════════════
+
+  【三态设计:loading / content / error】
+    UI 层通常需要处理"数据未就绪"和"请求失败"两个额外状态。
+    本布局用三个平级的容器,同一时刻只有一个 visible:
+      · progressBar   加载中(转圈)
+      · contentGroup  加载成功(显示天气数据)
+      · errorGroup    加载失败(显示错误提示 + 重试按钮)
+
+  【androidx.constraintlayout.widget.Group 是什么?】
+    一个"逻辑分组",本身不占布局位置,只用来批量控制多个 View 的可见性。
+    setVisibility(VISIBLE/GONE) 时,Group.referenceIds 里列出的所有 View
+    同步变化。比手动一个个 setVisibility 简洁得多。
+
+  【⭐ Day 15 挑战 4 改造:整个 ConstraintLayout 包进 SwipeRefreshLayout】
+    与新闻页不同(新闻页只包 RecyclerView),天气页布局是单一 ConstraintLayout
+    承载所有元素,所以把整个 ConstraintLayout 包进 SwipeRefreshLayout(srlWeather)
+    即可让下拉手势覆盖整个内容区,UX 更自然。
+-->
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/srlWeather"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/card_bg">
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/card_bg"
+    android:padding="24dp">
+
+    <!-- ① 加载中:居中的进度条 -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:visibility="visible" />
+
+    <!-- ② 内容区:城市名 / 温度 / 天气描述 / 风速 / 更新时间 -->
+    <TextView
+        android:id="@+id/tvCityName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_primary"
+        android:textSize="20sp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="北京" />
+
+    <!--
+        ⭐ Day 08 新增:离线数据标签
+        · 默认 GONE,Repository 返回 isFromCache=true 时才 VISIBLE
+        · 放在城市名右上角(end_toEndOf 对齐 tvCityName),12dp 小标签
+        · 橙色醒目提醒"当前看到的是缓存数据,不是实时的"
+        · 背景用系统内置 drawable,不用自己做 shape
+    -->
+    <TextView
+        android:id="@+id/tvOfflineTag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:background="@android:color/holo_orange_light"
+        android:paddingHorizontal="6dp"
+        android:paddingVertical="2dp"
+        android:text="📴 离线"
+        android:textColor="@android:color/white"
+        android:textSize="12sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/tvCityName"
+        app:layout_constraintBottom_toBottomOf="@id/tvCityName"
+        app:layout_constraintStart_toEndOf="@id/tvCityName"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/tvTemperature"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:textColor="@color/text_primary"
+        android:textSize="72sp"
+        app:layout_constraintTop_toBottomOf="@id/tvCityName"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="28.5°C" />
+
+    <TextView
+        android:id="@+id/tvWeatherDesc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="@color/text_secondary"
+        android:textSize="18sp"
+        app:layout_constraintTop_toBottomOf="@id/tvTemperature"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="多云" />
+
+    <TextView
+        android:id="@+id/tvWindSpeed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        app:layout_constraintTop_toBottomOf="@id/tvWeatherDesc"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="风速:12.3 km/h" />
+
+    <TextView
+        android:id="@+id/tvUpdateTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="@color/text_hint"
+        android:textSize="12sp"
+        app:layout_constraintTop_toBottomOf="@id/tvWindSpeed"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="更新时间:2026-07-28T10:00" />
+
+    <!--
+        用 Group 批量控制"内容"的显隐。
+        ⚠️ tvOfflineTag 不在这个 Group 里!因为 Group.setVisibility(VISIBLE)
+        会强制把所有引用的子 View 设为 VISIBLE,旋转重建时 View 状态恢复
+        可能导致 tvOfflineTag 被错误地显示出来(即使 render 设了 GONE)。
+        tvOfflineTag 的可见性由代码独立控制。
+    -->
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/contentGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:constraint_referenced_ids="tvCityName,tvTemperature,tvWeatherDesc,tvWindSpeed,tvUpdateTime"
+        tools:visibility="visible" />
+
+    <!-- ③ 错误区:错误提示 + 重试按钮 -->
+    <TextView
+        android:id="@+id/tvError"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_secondary"
+        android:textSize="16sp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btnRetry"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="加载失败,请重试" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnRetry"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="重试"
+        app:layout_constraintTop_toBottomOf="@id/tvError"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/errorGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:constraint_referenced_ids="tvError,btnRetry" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
