@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================
+  item_news.xml — 使用 MaterialCardView 美化后的新闻条目
+  ============================================================
+  外层：MaterialCardView(圆角 + 阴影)
+  内层：ConstraintLayout(布局约束)
+    ├─ 分类占位色块 (FrameLayout 装 TextView, 显示分类首字)
+    ├─ 置顶徽标 TextView (仅 isTop 时可见)
+    ├─ 标题 TextView (加粗、最多 2 行)
+    ├─ 摘要 TextView (灰色、最多 2 行)
+    └─ 元信息 TextView (作者·时间·阅读量)
+-->
+<!-- ============================================================
+     根容器:MaterialCardView
+     ============================================================
+     - xmlns:android      "android:xxx" 命名空间(系统属性)
+     - xmlns:app          "app:xxx" 命名空间(自定义属性,Material/AndroidX 用)
+     - xmlns:tools        "tools:xxx" 命名空间,仅预览用,不打包进 APK
+     - android:id         设置这个 View 的 id,代码里通过 R.id.cardNews 拿到它
+     - layout_width/height  match_parent = 撑满父容器,wrap_content = 由内容决定
+     - layout_margin*      卡片外边距,靠这个撑出卡片之间的空隙
+     - cardCornerRadius   圆角半径
+     - cardElevation      Z 轴高度,决定阴影浓度(值越大阴影越明显)
+     - cardUseCompatPadding=false → 不给低版本自动补 padding,阴影位置更可控
+-->
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardNews"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="12dp"
+    android:layout_marginVertical="6dp"
+    app:cardCornerRadius="10dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@color/card_bg"
+    app:strokeColor="@color/divider"
+    app:strokeWidth="1.5dp"
+    app:cardUseCompatPadding="false">
+
+    <!-- ============================================================
+         内容容器:ConstraintLayout
+         ============================================================
+         为什么用 ConstraintLayout?
+         - 相比嵌套 LinearLayout,可以扁平化布局,减少层级 → 渲染更快
+         - 用"约束"表达视图间关系:靠左对齐父容器/靠右对齐某 View 等
+         - padding="12dp" 是"内边距",让内容与卡片边缘留 12dp 空隙
+    -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp">
+
+        <!-- ============ 1. 分类占位色块(替代封面图) ============
+             用一个带彩色圆角背景的 TextView 来"扮演"封面图,
+             显示分类首字(如"科"/"汽"/"A"),运行时由 Adapter 动态设置颜色。
+             - 100dp × 80dp   → 固定尺寸的图形块
+             - background     → 引用 3.5 节做的 bg_cover_placeholder(shape drawable)
+             - gravity=center → 文字居中
+             - textSize=28sp  → 字号大,才能像"图标"
+             - constraintStart_toStartOf="parent" → 靠左对齐父容器左边
+             - constraintTop_toTopOf="parent"     → 顶部对齐父容器顶部
+             - tools:text     → 只在预览器中显示"科",打包时忽略
+        -->
+        <ImageView
+            android:id="@+id/ivCover"
+            android:layout_width="100dp"
+            android:layout_height="80dp"
+            android:background="@drawable/bg_cover_placeholder"
+            android:scaleType="centerCrop"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@color/cat_default" />
+
+        <!-- ============ 2. 置顶徽标(仅置顶新闻显示) ============
+             一个小红标签,text="置顶",背景是 3.5 节的 bg_badge_top。
+             - marginStart=12dp    → 与左边色块保持间距
+             - padding*=6dp/2dp    → 让文字与背景之间留空,徽标更饱满
+             - visibility="gone"   → 默认不显示;Adapter 里判断 isTop=true 时改成 VISIBLE
+             - constraintStart_toEndOf="@id/ivCover"  → 贴在封面右侧
+             - constraintTop_toTopOf="@id/ivCover"    → 与封面顶部对齐
+             - tools:visibility="visible" → 预览时强制显示,方便调整位置
+        -->
+        <TextView
+            android:id="@+id/tvBadgeTop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/bg_badge_top"
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="2dp"
+            android:text="@string/badge_top"
+            android:textColor="@color/badge_top_fg"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:layout_constraintStart_toEndOf="@id/ivCover"
+            app:layout_constraintTop_toTopOf="@id/ivCover"
+            tools:visibility="visible" />
+
+        <!-- ============ 3. 标题 ============
+             - layout_width="0dp" + constraintEnd/Start → "填充剩余宽度"(约束布局特有的写法)
+             - maxLines=2 + ellipsize=end → 最多 2 行,超出用省略号
+             - constraintTop_toBottomOf="@id/tvBadgeTop"
+                  即使徽标 gone,ConstraintLayout 也会把它当作 0 尺寸占位,
+                  所以标题始终在徽标下方(gone 时=紧贴顶部)。
+        -->
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="0dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/ivCover"
+            app:layout_constraintTop_toBottomOf="@id/tvBadgeTop"
+            tools:text="Android 15 正式发布,新增预测性返回手势与照片权限" />
+
+        <!-- ============ 4. 摘要 ============
+             - textColor="@color/text_secondary" → 摘要用中等灰,视觉次于标题
+             - textSize=13sp                     → 略小于标题
+             - marginTop=4dp                     → 与标题稍微拉开,避免挤在一起
+             - constraintTop_toBottomOf="@id/tvTitle" → 位于标题正下方
+        -->
+        <TextView
+            android:id="@+id/tvSummary"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/ivCover"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle"
+            tools:text="Google 推出 Android 15,新增预测性返回手势与部分照片/视频权限……" />
+
+        <!-- ============ 5. 元信息:作者 · 时间 · 阅读量 ============
+             - textColor="@color/text_hint" → 更浅的灰,视觉最弱
+             - textSize=12sp                → 最小字号
+             - constraintTop_toBottomOf="@id/tvSummary" → 排在摘要下方
+
+             ⚠️ 这里**只保留 top 约束,不加 bottom 约束**!
+                原因:如果同时写 top 和 bottom, wrap_content 的 View 会被
+                ConstraintLayout 居中(默认 vertical_bias=0.5),
+                当摘要占 2 行、内容高度超过色块 80dp 时,元信息会被"往上挤",
+                和摘要文字重叠。
+                去掉 bottom 约束后,tvMeta 自然贴在 tvSummary 下方,
+                卡片整体高度由内容决定,不会重叠。
+        -->
+        <TextView
+            android:id="@+id/tvMeta"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/text_hint"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/ivCover"
+            app:layout_constraintTop_toBottomOf="@id/tvSummary"
+            tools:text="新华社 · 2 小时前 · 1.2 万阅读" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>
