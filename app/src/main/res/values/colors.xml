@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  colors.xml — 项目统一色板
+  - 用 <color name="xxx">#RRGGBB</color> 形式声明颜色,代码里通过 R.color.xxx 或 XML 里 @color/xxx 引用
+  - 优点:改一次就全局生效,避免 UI 里到处硬编码颜色值
+  - 命名建议:按用途取名(text_primary / badge_top_bg),不要按颜色值(blue_1976)取名,方便主题切换
+-->
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <!-- =========================================================
+          基础色 —— 全局文字/分割线颜色
+          Material Design 建议:标题深、正文中、次要浅、分割线更浅
+          ========================================================= -->
+    <color name="text_primary">#212121</color>   <!-- 标题正文色:接近黑,不用纯黑,避免刺眼 -->
+    <color name="text_secondary">#757575</color> <!-- 次要文字:摘要/描述文字 -->
+    <color name="text_hint">#9E9E9E</color>      <!-- 提示/占位文字:元信息(作者、时间) -->
+    <color name="divider">#BDBDBD</color>        <!-- 分割线/卡片描边色:中灰,浅色/深色主题下都清晰 -->
+
+    <!-- =========================================================
+         页面底色 & 卡片底色 —— 分开定义,保证卡片和背景总有对比
+         浅色模式:screen=淡灰   card=白
+         深色模式(values-night):在 values-night/colors.xml 里再覆盖成
+                                screen=#121212 / card=#1E1E1E
+         ========================================================= -->
+    <color name="screen_bg">#ECEFF1</color>      <!-- 页面底色:略带蓝调的浅灰(比 #F5F5F5 对比度更强) -->
+    <color name="card_bg">#FFFFFF</color>        <!-- 卡片底色:纯白 -->
+
+    <!-- =========================================================
+         分类色 —— 每个新闻分类对应一个主色
+         用途:① 分类占位图背景色  ② 分类标签背景色
+         选色原则:饱和度中等偏低,避免刺眼;每类色相拉开距离
+         ========================================================= -->
+    <color name="cat_tech">#1976D2</color>       <!-- 科技 蓝(Material Blue 700) -->
+    <color name="cat_car">#388E3C</color>        <!-- 汽车 绿(Material Green 700) -->
+    <color name="cat_ai">#7B1FA2</color>         <!-- AI  紫(Material Purple 700) -->
+    <color name="cat_default">#616161</color>    <!-- 综合/默认 灰(Grey 700) -->
+
+    <!-- =========================================================
+         置顶徽标 —— 一浅一深的红色搭配
+         浅红作背景,深红作文字,视觉上有"警示/重要"感
+         ========================================================= -->
+    <color name="badge_top_bg">#FFEBEE</color>   <!-- 徽标背景:非常浅的粉红(Red 50) -->
+    <color name="badge_top_fg">#D32F2F</color>   <!-- 徽标文字:深红(Red 700) -->
+</resources>
