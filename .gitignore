@@ -16,3 +16,6 @@ local.properties
 .git-backup/
 .idea/
 .kotlin/
+app/schemas/
+app/build/
+app/.cxx/
