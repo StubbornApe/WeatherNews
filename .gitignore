@@ -19,3 +19,8 @@ local.properties
 app/schemas/
 app/build/
 app/.cxx/
+# ???? / ????
+.artifacts/
+build.log
+gradle/gradle-daemon-jvm.properties
+*.tmp
