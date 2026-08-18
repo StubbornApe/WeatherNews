@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  bg_cover_placeholder.xml — 分类占位色块背景
+  ==============================================================
+  <shape> 是 Android 里用 XML 声明"矢量形状"的标准方式,
+  编译后运行时是 GradientDrawable 类型(注意:虽然名字带 Gradient,
+  但只填 <solid> 时就是纯色矩形,不涉及渐变)。
+
+  代码里为什么能这样"动态改颜色":
+      (view.background as GradientDrawable).setColor(color)
+  就是把这里的 <solid> 颜色替换掉。因为它是 GradientDrawable 实例。
+
+  ⚠️ 多个 View 复用同一个 drawable 时,必须先 .mutate() 复制一份,
+      否则改一个所有 view 都变色 —— 详见 3.8 节 NewsAdapter 里的注释。
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">                     <!-- 形状:矩形(其他可选:oval/line/ring) -->
+    <corners android:radius="6dp" />               <!-- 4 个角统一 6dp 圆角 -->
+    <solid android:color="@color/cat_default" />   <!-- 填充色:默认灰,运行时会被 Adapter 改成分类色 -->
+</shape>

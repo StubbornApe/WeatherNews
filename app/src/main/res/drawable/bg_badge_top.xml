@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  bg_badge_top.xml — 置顶徽标背景
+  ==============================================================
+  作用:给"置顶"文字加一个浅红底 + 4dp 圆角的胶囊/标签样式,
+  让它像小徽章一样醒目。
+  和上面 bg_cover_placeholder.xml 用法一致,只是颜色和圆角不同。
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="4dp" />                <!-- 比封面圆角小一点,视觉更紧凑 -->
+    <solid android:color="@color/badge_top_bg" />   <!-- 浅红 #FFEBEE -->
+</shape>

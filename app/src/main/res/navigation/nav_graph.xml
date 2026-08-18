@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ═══════════════════════════════════════════════════════════════
+  nav_graph.xml —— Jetpack Navigation 导航图
+  ═══════════════════════════════════════════════════════════════
+
+  【文件位置】res/navigation/nav_graph.xml
+  【被谁引用】activity_main.xml 里
+    <FragmentContainerView app:navGraph="@navigation/nav_graph" />
+
+  【核心概念】
+    一个 nav_graph 就是一张"目的地流转图"——App 里每个可导航到的
+    Fragment 都叫一个 destination(目的地),destination 之间用
+    <action> 连线表示可跳转关系。NavController 就沿着这张图跳转。
+
+  【根节点属性】
+    android:id="@+id/nav_graph"     ← 整个图的 id,Safe Args 生成代码时用
+    app:startDestination="@id/xxx"  ← ⭐ App 启动时显示的首启目的地
+                                       (必须指向图内某个 <fragment> 的 id)
+
+  【<fragment> 属性】
+    android:id       destination 的唯一 id
+                     ⚠️ 必须与 bottom_nav_menu.xml 的 <item> id 一字不差,
+                        setupWithNavController 才能匹配
+    android:name     Fragment 的**全限定类名**(包名+类名)
+                     ⚠️ 类名写错会在切换到该 Tab 时 ClassNotFoundException
+    android:label    系统栏(ActionBar)显示的标题,与 setupWithNavController
+                     配合 NavigationUI 时会自动同步到 ActionBar
+    tools:layout     ⚠️ 仅 Design 面板预览用,tools: 命名空间不会打包进 APK
+
+  【<action> 元素】
+    表示 destination 之间的跳转关系,像:
+      <action android:id="@+id/toDetail" app:destination="@id/detailFragment"/>
+    今天 3 个 Tab 是"平级"关系,不需要 action;
+    Day14 讲 NewsFragment → NewsDetail 时会用到。
+-->
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/newsFragment">
+
+    <!-- 新闻页(首启目的地) -->
+    <fragment
+        android:id="@+id/newsFragment"
+        android:name="com.example.weathernewsapp.ui.news.NewsFragment"
+        android:label="@string/tab_news"
+        tools:layout="@layout/fragment_news" />
+
+    <fragment
+        android:id="@+id/weatherFragment"
+        android:name="com.example.weathernewsapp.ui.weather.WeatherFragment"
+        android:label="@string/tab_weather"
+        tools:layout="@layout/fragment_weather" />
+
+    <!-- 我的页(Day09 会重写) -->
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.weathernewsapp.ui.settings.SettingsFragment"
+        android:label="@string/tab_settings"
+        tools:layout="@layout/fragment_settings" />
+</navigation>
