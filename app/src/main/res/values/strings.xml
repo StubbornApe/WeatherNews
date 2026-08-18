@@ -17,11 +17,8 @@
 
     <string name="tab_news">新闻</string>
     <string name="tab_weather">天气</string>
-    <string name="tab_mine">我的</string>
     <!-- ⭐ Day 09:追加"设置" -->
     <string name="tab_settings">设置</string>
-    <string name="placeholder_weather">天气页 - 开发中</string>
-    <string name="placeholder_mine">我的 - 开发中</string>
     <!-- ⭐ Day 15 新增:新闻空态文案 -->
     <string name="news_empty_title">暂无新闻</string>
     <string name="news_empty_subtitle">换个频道或下拉刷新试试</string>
