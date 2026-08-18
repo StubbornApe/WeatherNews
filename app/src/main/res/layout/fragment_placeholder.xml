@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ═══════════════════════════════════════════════════════════════
+  fragment_placeholder.xml —— 占位页通用布局
+  ═══════════════════════════════════════════════════════════════
+
+  【文件位置】res/layout/fragment_placeholder.xml
+  【被谁 inflate】WeatherFragment + MineFragment 共用同一份布局
+
+  【设计理念:一份布局,两处复用】
+    - 占位页只有一个"XX 页 - 开发中"的居中文本,内容完全一样,
+      只是文字不同 → 用同一份布局,由 Fragment 代码里 setText 差异化。
+    - 好处:少写一个布局文件,后续换 UI 一改都改。
+    - 未来 Day06 / Day09 各自替换成真实布局(fragment_weather.xml /
+      fragment_mine.xml)后,这个占位布局可以删掉。
+
+  【居中三步曲(ConstraintLayout 常规操作)】
+    top → parentTop
+    bottom → parentBottom       ← top+bottom 约束会让 View 在竖直方向居中
+    start → parentStart
+    end → parentEnd             ← start+end 约束会让 View 在水平方向居中
+    tvPlaceholder 的宽高都是 wrap_content,所以最终效果就是"完全居中"。
+
+  【为什么用 ConstraintLayout 而不是 FrameLayout + layout_gravity="center"?】
+    效果一致,但:
+      · ConstraintLayout 与其他复杂布局风格保持一致(团队规范)
+      · 未来若要在这个占位页加"重试"按钮之类,直接加子 View 不需要换外框
+    简单场景两种都行。
+
+  【tools:text 是什么?】
+    仅供 Design 面板预览的假文本,tools: 命名空间不会打包进 APK。
+    运行时真正的文本由 WeatherFragment / MineFragment 在 onViewCreated
+    里通过 setText(R.string.placeholder_xxx) 设置。
+-->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/card_bg">
+
+    <!-- 居中文本:内容由子 Fragment 通过 setText 差异化 -->
+    <TextView
+        android:id="@+id/tvPlaceholder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_secondary"
+        android:textSize="20sp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="XX 页 - 开发中" />
+</androidx.constraintlayout.widget.ConstraintLayout>

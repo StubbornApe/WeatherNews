@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ═══════════════════════════════════════════════════════════════
+  bottom_nav_menu.xml —— 底部导航栏(BottomNavigationView)菜单
+  ═══════════════════════════════════════════════════════════════
+
+  【文件位置】res/menu/bottom_nav_menu.xml
+  【被谁使用】activity_main.xml 里
+    <BottomNavigationView app:menu="@menu/bottom_nav_menu" />
+
+  【核心规则:menu id 必须与 nav_graph destination id 完全一致】
+    setupWithNavController(navController) 内部工作原理:
+      1. 监听 BottomNav 的 item 点击事件
+      2. 拿到点击的 item.itemId (例如 R.id.newsFragment)
+      3. 用同一个 id 去 nav_graph 里查找 destination:
+         navController.navigate(itemId)
+      4. 若 nav_graph 里找不到同名 destination,点击就会静默失败。
+    因此这里的 android:id 必须与 nav_graph.xml 的
+    <fragment android:id="..." /> 一字不差。
+
+  【item 数量建议】
+    - 3 个:默认 labeled 模式,3 个 title 都常显(本项目采用)
+    - 4~5 个:默认 selected 模式,只有当前项显示 title;
+             可加 app:labelVisibilityMode="labeled" 强制常显
+    - 超过 5 个:官方禁止,应改用 NavigationRail(平板)或 DrawerLayout
+
+  【icon 尺寸】建议 24dp vector drawable,颜色不要写死,
+    由 BottomNavigationView 的 app:itemIconTint 统一着色(见 activity_main.xml)。
+-->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 新闻 Tab:App 的默认起始页(与 nav_graph 的 startDestination 对应) -->
+    <item
+        android:id="@+id/newsFragment"
+        android:icon="@drawable/ic_news_24"
+        android:title="@string/tab_news" />
+
+    <!-- 天气 Tab:Day06 会接入 Open-Meteo API,把占位替换成真实数据 -->
+    <item
+        android:id="@+id/weatherFragment"
+        android:icon="@drawable/ic_weather_24"
+        android:title="@string/tab_weather" />
+
+    <!-- ⭐ Day 09:把"我的"替换为"设置" -->
+    <item
+        android:id="@+id/settingsFragment"
+        android:icon="@drawable/ic_settings"
+        android:title="@string/tab_settings" />
+</menu>

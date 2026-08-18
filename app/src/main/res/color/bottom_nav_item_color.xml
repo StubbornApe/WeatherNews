@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ═══════════════════════════════════════════════════════════════
+  bottom_nav_item_color.xml —— BottomNav item 选中态颜色选择器
+  ═══════════════════════════════════════════════════════════════
+
+  【文件位置】res/color/bottom_nav_item_color.xml
+    ⚠️ 必须放 res/color/ 目录(不是 res/values/colors.xml),
+       Android 通过所在目录识别为 ColorStateList 资源。
+
+  【被谁使用】activity_main.xml 里两处引用同一个 selector:
+    app:itemIconTint="@color/bottom_nav_item_color"   ← 图标颜色
+    app:itemTextColor="@color/bottom_nav_item_color"  ← 文字颜色
+    保证选中/未选中态整体颜色统一。
+
+  【selector 匹配原则】
+    <item> 按声明顺序匹配,第一个满足条件的胜出。
+      android:state_checked="true"  ← 当前选中的 Tab (1 个)
+      android:state_checked="false" ← 未选中的 Tab (其余 2 个)
+
+  【颜色引用来源】
+    - @color/cat_tech  = Day02/03 已定义的品牌色(科技分类色)
+    - @color/text_hint = Day02 已定义的次要文本色(灰色)
+    如 colors.xml 里没这两个色,可临时用 @color/purple_500 / @color/gray 替代。
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/cat_tech"   android:state_checked="true"  />
+    <item android:color="@color/text_hint"  android:state_checked="false" />
+</selector>
