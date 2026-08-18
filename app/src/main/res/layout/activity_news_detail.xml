@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  activity_news_detail.xml — 新闻详情页
+  ============================================================
+  结构:
+    ├─ AppBarLayout
+    │    └─ MaterialToolbar (顶部标题栏 + 返回箭头)
+    └─ NestedScrollView (内容可滚动)
+         └─ ConstraintLayout
+             ├─ 分类色块(和列表页同风格)
+             ├─ 置顶徽标
+             ├─ 大标题
+             ├─ 元信息(作者 · 时间 · 阅读量)
+             ├─ 分割线
+             └─ 正文摘要(未来接入 API 后换成完整正文)
+-->
+<!--
+  ══════════════════════════════════════════════════════════════════════
+  根容器:CoordinatorLayout
+  ══════════════════════════════════════════════════════════════════════
+  它是"能协调子 View 联动行为"的 FrameLayout 增强版,
+  最常见的搭配就是 AppBarLayout + 内容区,支持:
+    ① AppBar 随内容滚动而收起/展开(今天用不到,Day05/06 再启用)
+    ② SnackBar 显示时自动上推 FAB
+  今天先当普通容器用,提前占位以便后续升级不改布局。
+  三个 xmlns:
+    · android  基础属性
+    · app      material / androidx 库自定义属性(app:layout_behavior 等)
+    · tools    仅在 Android Studio 预览面板生效,不打进 APK
+-->
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/detailRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/card_bg"
+    tools:context=".NewsDetailActivity">
+
+    <!--
+      ══════════════════════════════════════════════════════════════════
+      顶部标题栏区域:AppBarLayout
+      ══════════════════════════════════════════════════════════════════
+      AppBarLayout 本质是一个"垂直 LinearLayout",专为承载 Toolbar / TabLayout
+      而设计,能与 CoordinatorLayout 协作实现"滚动隐藏"等特效。
+      它自动给子 View 加一层 elevation(阴影),让顶栏视觉上"浮"在内容之上。
+
+      背景默认给一个中性灰(cat_default),真正的分类色在
+      NewsDetailActivity.kt 里 bindNews() 会覆盖它(让详情页染色 = 该新闻分类色)。
+    -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/cat_default">
+
+        <!--
+          MaterialToolbar —— Material 3 版本的 Toolbar,比原生 Toolbar 更贴合 M3 主题
+          高度用 ?attr/actionBarSize:引用系统主题里定义的标准 AppBar 高度(56dp),
+              这样切换主题 / 平板/手机 时高度自动适配,不用写死。
+          app:title              标题文字(直接由 XML 提供,也可以运行时 toolbar.title = "..." 覆盖)
+          app:titleTextColor     标题文字颜色,白色配深底色
+          app:navigationIcon     左上角返回箭头图标(在 res/drawable/ic_arrow_back.xml)
+          app:navigationIconTint 让箭头始终是白色,不受主题 tint 干扰
+
+          点击箭头的行为在 NewsDetailActivity.kt 里:
+              toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
+          即"点箭头 = 按物理返回键",两条路径归一。
+        -->
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="@string/title_news_detail"
+            app:titleTextColor="#FFFFFF"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:navigationIconTint="#FFFFFF" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!--
+      ══════════════════════════════════════════════════════════════════
+      内容滚动区:NestedScrollView
+      ══════════════════════════════════════════════════════════════════
+      为什么用 NestedScrollView 而不是普通 ScrollView?
+        因为 CoordinatorLayout + AppBarLayout 的"滚动联动"需要"嵌套滚动"事件,
+        普通 ScrollView 不支持传递嵌套滚动事件,联动就失效。
+        NestedScrollView 内置了 NestedScrollingChild 实现,是 M3 组件的标配搭档。
+
+      app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        —— 这一行是关键!它告诉 CoordinatorLayout:"我是内容区,请负责把我
+           摆到 AppBar 的正下方"。没有这一行,内容会被 AppBar 遮住。
+        值 `appbar_scrolling_view_behavior` 是 Material 库预定义好的字符串常量,
+        对应 AppBarLayout.ScrollingViewBehavior 类。
+    -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/detailScroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <!--
+          ConstraintLayout —— NestedScrollView 只能有一个直接子 View,
+          所以用一个 ConstraintLayout 承载所有内容元素。
+          padding=16dp:内容与屏幕边缘留 16dp 呼吸空间。
+        -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <!--
+              ① 分类色块 tvDetailCover
+                 复用列表页 Day03 建立的 bg_cover_placeholder(圆角矩形 shape)。
+                 大小 64×64dp;内部显示分类首字(如"科"、"汽"、"A"),字号 22sp 白色加粗。
+                 运行时由 bindNews() 通过 GradientDrawable.setColor() 动态改颜色。
+              tools:text          仅预览面板显示,不影响运行时
+              约束:左上角对齐父容器(parent)
+            -->
+            <TextView
+                android:id="@+id/tvDetailCover"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="@drawable/bg_cover_placeholder"
+                android:gravity="center"
+                android:textColor="#FFFFFF"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="科" />
+
+            <!--
+              ② 置顶徽标 tvDetailBadgeTop
+                 只在 news.isTop == true 时可见(bindNews() 里控制)。
+                 XML 里默认 visibility="gone",tools:visibility="visible" 只影响预览。
+                 padding 用简写 padding{Horizontal/Vertical} —— API 26+ 支持,更清爽。
+              约束:紧贴 tvDetailCover 右侧,与其顶部对齐
+            -->
+            <TextView
+                android:id="@+id/tvDetailBadgeTop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_badge_top"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="2dp"
+                android:text="@string/badge_top"
+                android:textColor="@color/badge_top_fg"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                app:layout_constraintStart_toEndOf="@id/tvDetailCover"
+                app:layout_constraintTop_toTopOf="@id/tvDetailCover"
+                tools:visibility="visible" />
+
+            <!--
+              ③ 分类标签(纯文字) tvDetailCategory
+                 显示"科技 / 汽车 / AI / 综合"等文字标签。
+              约束:紧贴徽标右侧,与徽标顶/底对齐(即"垂直居中于徽标行")。
+                    这种"三对约束"让分类标签始终与徽标处于同一水平线。
+                    即使徽标 gone(不占空间),约束依然生效,因为
+                    ConstraintLayout 默认对 gone 视图保留 0 尺寸约束点。
+            -->
+            <TextView
+                android:id="@+id/tvDetailCategory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                app:layout_constraintStart_toEndOf="@id/tvDetailBadgeTop"
+                app:layout_constraintTop_toTopOf="@id/tvDetailBadgeTop"
+                app:layout_constraintBottom_toBottomOf="@id/tvDetailBadgeTop"
+                tools:text="科技" />
+
+            <!--
+              ④ 大标题 tvDetailTitle
+                 layout_width="0dp" + start/end 约束 → "宽度填满父容器"(match_constraint)。
+                 22sp 加粗;真实项目里 wrap_content 会挤到右边缘,所以用 0dp 明确占满。
+              约束:左右贴父容器,顶部在色块下方 16dp
+            -->
+            <TextView
+                android:id="@+id/tvDetailTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:textColor="@color/text_primary"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvDetailCover"
+                tools:text="Android 15 正式发布,新增预测性返回手势与照片权限" />
+
+            <!--
+              ⑤ 元信息 tvDetailMeta
+                 拼接"作者 · 时间 · 阅读量:1.2 万"这类信息,由 bindNews() 组装。
+                 12sp 提示色(#9E9E9E),视觉上从属于标题。
+            -->
+            <TextView
+                android:id="@+id/tvDetailMeta"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/text_hint"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvDetailTitle"
+                tools:text="新华社 · 2 小时前 · 阅读量:1.2 万" />
+
+            <!--
+              ⑥ 分割线 detailDivider
+                 1px 高的分隔线(注意:是 px 不是 dp,只占 1 物理像素,视觉更锐利)。
+                 这是 Material 分隔线的标准做法;若用 1dp,高分屏上会显得粗。
+            -->
+            <View
+                android:id="@+id/detailDivider"
+                android:layout_width="0dp"
+                android:layout_height="1px"
+                android:layout_marginTop="12dp"
+                android:background="@color/divider"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvDetailMeta" />
+
+            <!--
+              ⑦ 正文 tvDetailBody
+                 今天暂时显示 news.summary 摘要,后续接入 API 后换成完整正文。
+                 lineSpacingExtra=4dp —— 行距加 4dp,长段落阅读舒适。
+                 16sp 正文字号,与卡片摘要区分。
+              约束:上贴分割线,下贴 parent 底 —— 这样正文的高度会撑满 ConstraintLayout,
+                    再由 NestedScrollView 决定是否可滚动。
+            -->
+            <TextView
+                android:id="@+id/tvDetailBody"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:lineSpacingExtra="4dp"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/detailDivider"
+                app:layout_constraintBottom_toBottomOf="parent"
+                tools:text="Google 推出 Android 15,新增预测性返回手势与部分照片/视频权限……" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <WebView
+        android:id="@+id/webDetail"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
