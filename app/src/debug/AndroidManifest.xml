@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ⭐ Day 18 修复:仅 debug 变体生效。
+  生产 AndroidManifest 的 android:name=".WeatherNewsApp"(@HiltAndroidApp),
+  但 @HiltAndroidTest 必须用 Hilt 内置的 HiltTestApplication。
+  故在 debug 用 tools:replace 把被测 Application 替换为 HiltTestApplication(多包名安全类)。
+  release 编译不合并本文件,生产使用 WeatherNewsApp,完全不受影响。
+  (注意:WeatherNewsApp 是无逻辑空壳,替换为 HiltTestApplication 不丢失生产行为。)
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application />
+
+</manifest>

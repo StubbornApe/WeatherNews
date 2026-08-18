@@ -30,31 +30,24 @@ data class WeatherEntity(
     @PrimaryKey
     @ColumnInfo(name = "city_name")
     val cityName: String,
-
     /** 温度文本,例如 "27.3°C" */
     val temperature: String,
-
     /** ⭐ Day 10 新增:摄氏度数值,用于单位换算 */
     @ColumnInfo(name = "temperature_celsius")
     val temperatureCelsius: Double = 0.0,
-
     /** WMO 天气码(整数)*/
     @ColumnInfo(name = "weather_code")
     val weatherCode: Int,
-
     /** 天气描述,例如 "晴" / "多云" */
     @ColumnInfo(name = "weather_desc")
     val weatherDesc: String,
-
     /** 风速文本,例如 "12.5 km/h" */
     @ColumnInfo(name = "wind_speed")
     val windSpeed: String,
-
     /** 数据更新时间(由 API 返回),例如 "2026-07-31T10:00" */
     @ColumnInfo(name = "update_time")
     val updateTime: String,
-
     /** 缓存写入时间(系统当前毫秒数),用于后续过期判断 */
     @ColumnInfo(name = "cached_at")
-    val cachedAt: Long
+    val cachedAt: Long,
 )

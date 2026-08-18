@@ -1,37 +1,30 @@
 package com.example.weathernewsapp.data.remote
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  import 分区(按 Android 官方约定:项目内 → okhttp3 → retrofit2 → java 标准库)
-// ══════════════════════════════════════════════════════════════════════════════
+// =============================================================================
+//  import 分区(按 ktlint 默认规则:其他 → java.* → javax.* → kotlin.* → aliases)
+// =============================================================================
+// · BuildConfig:项目内生成的 R/BuildConfig 类。Gradle 编译时根据构建变体
+//   (debug/release)生成,里面有 DEBUG / APPLICATION_ID / VERSION_NAME 等静态字段。
+//   ⚠️ AGP 8.0+ 默认关闭生成,需要在 app/build.gradle.kts 加
+//   buildFeatures { buildConfig = true }。
+// · OkHttpClient:OkHttp 的入口类,Retrofit 底层的 HTTP 请求都交给它执行。
+//   一个 App 建议只维护一个 OkHttpClient 单例(连接池+线程池,重复创建浪费)。
+// · HttpLoggingInterceptor:OkHttp 官方日志拦截器。装到 OkHttpClient 后,
+//   每次请求/响应按 level 打到 Logcat。artifact:com.squareup.okhttp3:logging-interceptor
+// · Retrofit 主类:提供 Builder 配 baseUrl / OkHttpClient / Converter,
+//   通过 .create(接口::class.java) 用动态代理生成接口实现。
+// · GsonConverterFactory:Retrofit 与 Gson 的桥接器,数据类自动反序列化。
+//   若换 Moshi/kotlinx.serialization,这里换对应 ConverterFactory 即可。
+// · TimeUnit:Java 标准库的"时间单位"枚举(SECONDS/MILLISECONDS/MINUTES...)。
+//   OkHttp 的超时配置需要"数值+单位"两个参数,单位就用这个。
+// =============================================================================
 
-// 项目自身生成的 BuildConfig 类。Gradle 编译时会根据构建变体(debug/release)
-// 生成一个 Java 类,里面有 DEBUG / APPLICATION_ID / VERSION_NAME 等静态字段。
-// 用它可以在运行时判断"当前是不是 Debug 构建",决定要不要装日志拦截器等敏感行为。
-// ⚠️ AGP 8.0+ 默认关闭生成,需要在 app/build.gradle.kts 加 buildFeatures { buildConfig = true }
 import com.example.weathernewsapp.BuildConfig
-
-// OkHttp 的入口类。Retrofit 底层的 HTTP 请求全都交给它执行。
-// 一个 App 建议只维护一个 OkHttpClient 单例(内部有连接池、线程池,重复创建极其浪费)。
 import okhttp3.OkHttpClient
-
-// OkHttp 官方提供的"日志拦截器"。装到 OkHttpClient 后,每次请求 / 响应
-// 都会被它拦截并按指定 level 打到 Logcat,是网络调试第一利器。
-// 它其实是单独的 artifact:com.squareup.okhttp3:logging-interceptor,别忘了加依赖。
 import okhttp3.logging.HttpLoggingInterceptor
-
-// Retrofit 主类。它提供 Builder 让你配置 baseUrl / OkHttpClient / Converter,
-// 然后通过 .create(接口::class.java) 用动态代理生成接口的实现。
 import retrofit2.Retrofit
-
-// Retrofit 与 Gson 的桥接器。把它加进 Retrofit Builder 后,
-// 接口方法返回的数据类会自动被 Gson 反序列化。
-// 若换 Moshi / kotlinx.serialization,这里换成对应的 ConverterFactory 即可。
 import retrofit2.converter.gson.GsonConverterFactory
-
-// Java 标准库里表示"时间单位"的枚举(SECONDS / MILLISECONDS / MINUTES...)。
-// OkHttp 的超时配置需要传"数值 + 单位"两个参数,单位就用这个。
 import java.util.concurrent.TimeUnit
-
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════
@@ -107,7 +100,6 @@ object RetrofitProvider {
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
             .writeTimeout(15, TimeUnit.SECONDS)
-
             // .apply { } 是 Kotlin 标准函数:在其接收者(此处是 Builder)上下文里执行 lambda,
             //   返回接收者本身。用在 Builder 链上是"条件配置"的常见写法 ——
             //   我们只在 Debug 构建时装日志拦截器,不打断链式调用。
@@ -120,20 +112,20 @@ object RetrofitProvider {
                     // HttpLoggingInterceptor 是 OkHttp 官方拦截器。
                     //   构造时不带参数 = 默认打到 java.util.logging.Logger(会转到 Logcat)。
                     //   .apply 配置它的 level(默认 NONE,必须显式设置才生效)。
-                    val logging = HttpLoggingInterceptor().apply {
-                        // Level.BODY = 打印请求头 + 请求体 + 响应头 + 响应体全部。
-                        // Debug 期间用它最省事,能看到 JSON 完整内容。
-                        // ⚠️ 生产环境改成 NONE,否则 access_token / 用户手机号
-                        //    这类敏感数据会被打到日志里,存在隐私泄露风险。
-                        level = HttpLoggingInterceptor.Level.BODY
-                    }
+                    val logging =
+                        HttpLoggingInterceptor().apply {
+                            // Level.BODY = 打印请求头 + 请求体 + 响应头 + 响应体全部。
+                            // Debug 期间用它最省事,能看到 JSON 完整内容。
+                            // ⚠️ 生产环境改成 NONE,否则 access_token / 用户手机号
+                            //    这类敏感数据会被打到日志里,存在隐私泄露风险。
+                            level = HttpLoggingInterceptor.Level.BODY
+                        }
                     // addInterceptor 把拦截器加进 OkHttp 的"拦截器链"。
                     //   链是有序的:先加的先执行。日志拦截器建议放最外层,
                     //   这样能看到最原始的请求 / 最终的响应。
                     addInterceptor(logging)
                 }
             }
-
             // Builder 收尾:构建不可变的 OkHttpClient 实例。
             //   OkHttp 内部所有配置一旦 build 就冻结,想改配置只能用 newBuilder() 派生新实例。
             .build()
@@ -151,18 +143,15 @@ object RetrofitProvider {
         Retrofit.Builder()
             // .baseUrl(...) —— 全 App 的根地址。必须以 "/" 结尾(见上文说明)。
             .baseUrl(BASE_URL)
-
             // .client(...) —— 传入我们配置好的 OkHttpClient。
             //   如果不显式传,Retrofit 会 new 一个"裸奔"的 OkHttpClient(没超时、没日志)。
             //   在需要拦截器 / 自定义超时的项目里必须传自己的。
             .client(okHttpClient)
-
             // .addConverterFactory(...) —— 注册 JSON ↔ Kotlin 转换器。
             //   Gson 的 GsonConverterFactory.create() 会用 Gson 反射解析 JSON。
             //   若换 kotlinx.serialization,这里换成 asConverterFactory 即可(见进阶挑战 1)。
             //   ⚠️ Converter 可以注册多个,Retrofit 按注册顺序尝试。
             .addConverterFactory(GsonConverterFactory.create())
-
             // 与 OkHttp 一样,.build() 之后 Retrofit 实例不可变。
             .build()
     }
@@ -195,7 +184,7 @@ object RetrofitProvider {
     private val newsRetrofit: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(NEWS_BASE_URL)
-            .client(okHttpClient)          // 复用天气的 OkHttpClient
+            .client(okHttpClient) // 复用天气的 OkHttpClient
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }

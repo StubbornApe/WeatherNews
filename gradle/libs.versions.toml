@@ -28,6 +28,9 @@ runner = "1.6.2"
 rules = "1.6.1"
 core = "1.6.1"
 
+# ⭐ Day 19 新增:ktlint 静态代码检查
+ktlint = "12.1.0"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -79,3 +82,6 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }    # ⭐ Day 14 新增
+
+# ⭐ Day 19 新增:ktlint 静态代码检查
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }

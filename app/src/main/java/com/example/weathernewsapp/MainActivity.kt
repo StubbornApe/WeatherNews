@@ -1,19 +1,20 @@
 package com.example.weathernewsapp
 
 // ============ import 分区(按 Android 官方约定:android → androidx → 第三方 → 项目) ============
-import android.os.Bundle                                            // Activity 状态保存/恢复入参
-import androidx.activity.enableEdgeToEdge                           // Android 15+ 边到边模式(3.8 节)
-import androidx.core.view.ViewCompat                                // WindowInsets 兼容 API
-import androidx.core.view.WindowInsetsCompat                        // 系统栏 Inset 类型枚举
-import androidx.navigation.fragment.NavHostFragment                 // Navigation:承载 Fragment 的宿主
-import androidx.navigation.ui.setupWithNavController                // NavigationUI 扩展函数:一行绑定 BottomNav
-import com.example.weathernewsapp.common.LifecycleLoggingActivity   // 生命周期日志基类(day05 抽取)
-import com.google.android.material.bottomnavigation.BottomNavigationView  // Material 底部导航栏
+import android.os.Bundle // Activity 状态保存/恢复入参
+import androidx.activity.enableEdgeToEdge // Android 15+ 边到边模式(3.8 节)
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.view.ViewCompat // WindowInsets 兼容 API
+import androidx.core.view.WindowInsetsCompat // 系统栏 Inset 类型枚举
+import androidx.navigation.fragment.NavHostFragment // Navigation:承载 Fragment 的宿主
+import androidx.navigation.ui.setupWithNavController // NavigationUI 扩展函数:一行绑定 BottomNav
+import com.example.weathernewsapp.common.LifecycleLoggingActivity // 生命周期日志基类(day05 抽取)
 import com.example.weathernewsapp.data.datastore.SettingsDataStore
+import com.google.android.material.bottomnavigation.BottomNavigationView // Material 底部导航栏
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+
 /**
  * ═══════════════════════════════════════════════════════════════════════════
  * MainActivity —— App 的宿主 Activity
@@ -39,7 +40,6 @@ import kotlinx.coroutines.runBlocking
  */
 @AndroidEntryPoint
 class MainActivity : LifecycleLoggingActivity() {
-
     /**
      * Activity 唯一生命周期入口。
      * 注意:由于继承了 LifecycleLoggingActivity,基类已经在 super.onCreate
@@ -57,8 +57,8 @@ class MainActivity : LifecycleLoggingActivity() {
         //     · Android 15 之后是**默认行为**,不主动 opt-in 也会强制开启
         //   ⚠️ 必须在 super.onCreate 之前调用(Activity 主题相关),否则不生效。
         enableEdgeToEdge()
-        super.onCreate(savedInstanceState)          // ⚠️ 必须先调 super,保证基类日志、
-                                                    //     ViewModel、SavedState 正常初始化
+        super.onCreate(savedInstanceState) // ⚠️ 必须先调 super,保证基类日志、
+        //     ViewModel、SavedState 正常初始化
 
         // ═══════════════════════════════════════════════════════════════════════
         //  ⭐ Day 09:在 setContentView 之前读 DataStore 的深色模式设置并应用
@@ -122,9 +122,10 @@ class MainActivity : LifecycleLoggingActivity() {
             //                           3. 如果 Flow 为空(永远不会发生,因为 DataStore
             //                              至少会发射一个值),抛出 NoSuchElementException
             //                         这里我们只读"当前值"初始化 UI,不需要持续监听
-            val settings = SettingsDataStore(this@MainActivity.applicationContext)
-                .settingsFlow
-                .first()
+            val settings =
+                SettingsDataStore(this@MainActivity.applicationContext)
+                    .settingsFlow
+                    .first()
 
             // ── 第 2 行:if 表达式决定夜间模式常量 ──
 
@@ -141,11 +142,12 @@ class MainActivity : LifecycleLoggingActivity() {
             //
             //   整句效果:settings.darkMode=true 时 nightMode = MODE_NIGHT_YES,
             //           否则 nightMode = MODE_NIGHT_NO
-            val nightMode = if (settings.darkMode) {
-                AppCompatDelegate.MODE_NIGHT_YES
-            } else {
-                AppCompatDelegate.MODE_NIGHT_NO
-            }
+            val nightMode =
+                if (settings.darkMode) {
+                    AppCompatDelegate.MODE_NIGHT_YES
+                } else {
+                    AppCompatDelegate.MODE_NIGHT_NO
+                }
 
             // ── 第 3 行:应用夜间模式 ──
 
@@ -169,7 +171,7 @@ class MainActivity : LifecycleLoggingActivity() {
         //   此时深色/浅色主题已设置好,后续 setContentView 渲染的
         //   就是正确的主题,不会出现"白→黑"闪屏。
 
-        setContentView(R.layout.activity_main)      // 加载 3.3 节创建的宿主布局
+        setContentView(R.layout.activity_main) // 加载 3.3 节创建的宿主布局
 
         // ═══════════════════════════════════════════════════════════════
         // ② 给 BottomNav 加 padding,避免被系统导航条遮挡
@@ -193,7 +195,7 @@ class MainActivity : LifecycleLoggingActivity() {
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             // 保留 View 原有的 top padding,只覆盖 left/right/bottom
             v.setPadding(bars.left, v.paddingTop, bars.right, bars.bottom)
-            insets   // 返回原 insets(不 consume,允许子 View 继续接收)
+            insets // 返回原 insets(不 consume,允许子 View 继续接收)
         }
 
         // ═══════════════════════════════════════════════════════════════
@@ -222,8 +224,9 @@ class MainActivity : LifecycleLoggingActivity() {
         //   ⚠️ 如果 activity_main.xml 里 android:name 写错(不是
         //      androidx.navigation.fragment.NavHostFragment),这行会
         //      抛 ClassCastException,是个常见坑。
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.navHostFragment) as NavHostFragment
+        val navHostFragment =
+            supportFragmentManager
+                .findFragmentById(R.id.navHostFragment) as NavHostFragment
 
         // 每个 NavHost 对应一个 NavController(导航控制器)。
         // NavController 提供:

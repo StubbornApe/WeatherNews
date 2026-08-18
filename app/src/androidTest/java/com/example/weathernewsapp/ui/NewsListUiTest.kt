@@ -24,7 +24,6 @@ import org.junit.runner.RunWith
 @HiltAndroidTest
 @RunWith(AndroidJUnit4::class)
 class NewsListUiTest {
-
     // order:先让 Hilt 就绪,再启动 Activity
     @get:Rule(order = 0)
     val hiltRule = HiltAndroidRule(this)
@@ -52,7 +51,7 @@ class NewsListUiTest {
     fun clickFirstItem_openDetail_showTitle() {
         onView(withId(R.id.recyclerView))
             .perform(
-                RecyclerViewActions.actionOnItemAtPosition<NewsAdapter.NewsViewHolder>(0, click())
+                RecyclerViewActions.actionOnItemAtPosition<NewsAdapter.NewsViewHolder>(0, click()),
             )
         // 跳转到 NewsDetailActivity,详情标题 = 第一条新闻的 title
         onView(withId(R.id.tvDetailTitle))

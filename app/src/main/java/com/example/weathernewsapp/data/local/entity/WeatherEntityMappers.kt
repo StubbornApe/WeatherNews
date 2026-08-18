@@ -2,7 +2,7 @@ package com.example.weathernewsapp.data.local.entity
 
 import com.example.weathernewsapp.data.model.Weather
 
-/**
+/*
  * ═══════════════════════════════════════════════════════════════════════════
  * WeatherEntityMappers —— Domain (Weather) ↔ Entity (WeatherEntity) 转换扩展
  * ═══════════════════════════════════════════════════════════════════════════
@@ -31,11 +31,6 @@ import com.example.weathernewsapp.data.model.Weather
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  Domain (Weather) → Entity (WeatherEntity)
-//  使用场景:网络请求成功后,把业务模型转成 Entity,准备 insert 到 Room
-// ═══════════════════════════════════════════════════════════════════════════
-
 /**
  * 把业务层的 Weather 转成数据库表的 WeatherEntity。
  *
@@ -61,20 +56,22 @@ import com.example.weathernewsapp.data.model.Weather
  *   // 或指定时间: weather.toEntity(cachedAt = yesterdayMs)
  *   dao.insert(entity)
  */
-fun Weather.toEntity(
-    cachedAt: Long = System.currentTimeMillis()
-): WeatherEntity =
+fun Weather.toEntity(cachedAt: Long = System.currentTimeMillis()): WeatherEntity =
     WeatherEntity(
         // this.xxx 里的 this 指"被扩展的对象",也就是 Weather 实例
         // 可以省略 this,直接写 cityName,但保留 this. 让初学者更清楚"这个字段从哪来"
-        cityName            = this.cityName,
-        temperature         = this.temperatureText,   // ⭐ 名字不同:temperatureText → temperature
-        temperatureCelsius  = this.temperatureCelsius,   // ⭐ Day 10 新增
-        weatherCode         = this.weatherCode,
-        weatherDesc         = this.weatherDesc,
-        windSpeed           = this.windSpeedText,     // ⭐ 名字不同:windSpeedText → windSpeed
-        updateTime          = this.updateTime,
-        cachedAt            = cachedAt                // ⭐ Domain 没有这个字段,由参数传入
+        cityName = this.cityName,
+        // ⭐ 名字不同:temperatureText → temperature
+        temperature = this.temperatureText,
+        // ⭐ Day 10 新增
+        temperatureCelsius = this.temperatureCelsius,
+        weatherCode = this.weatherCode,
+        weatherDesc = this.weatherDesc,
+        // ⭐ 名字不同:windSpeedText → windSpeed
+        windSpeed = this.windSpeedText,
+        updateTime = this.updateTime,
+        // ⭐ Domain 没有这个字段,由参数传入
+        cachedAt = cachedAt,
     )
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -110,12 +107,15 @@ fun Weather.toEntity(
  */
 fun WeatherEntity.toDomain(): Weather =
     Weather(
-        cityName            = this.cityName,
-        temperatureText     = this.temperature,         // ⭐ 反向:temperature → temperatureText
-        temperatureCelsius  = this.temperatureCelsius,  // ⭐ Day 10 新增
-        weatherCode         = this.weatherCode,
-        weatherDesc         = this.weatherDesc,
-        windSpeedText       = this.windSpeed,           // ⭐ 反向:windSpeed → windSpeedText
-        updateTime          = this.updateTime
+        cityName = this.cityName,
+        // ⭐ 反向:temperature → temperatureText
+        temperatureText = this.temperature,
+        // ⭐ Day 10 新增
+        temperatureCelsius = this.temperatureCelsius,
+        weatherCode = this.weatherCode,
+        weatherDesc = this.weatherDesc,
+        // ⭐ 反向:windSpeed → windSpeedText
+        windSpeedText = this.windSpeed,
+        updateTime = this.updateTime,
         // isFromCache 不传,用默认值 false(业务语义交给 Repository 层)
     )

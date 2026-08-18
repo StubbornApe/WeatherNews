@@ -30,13 +30,15 @@ import com.example.weathernewsapp.data.model.Weather
  */
 sealed class WeatherUiState {
     object Idle : WeatherUiState()
+
     object Loading : WeatherUiState()
 
-    //data class Success(val weather: Weather) : WeatherUiState()
+    // data class Success(val weather: Weather) : WeatherUiState()
     data class Success(
         val weather: Weather,
         // ⭐ Day 12:已按当前温度单位格式化好的温度文本,如 "23.5°C"
-        val temperatureText: String = weather.temperatureText
+        val temperatureText: String = weather.temperatureText,
     ) : WeatherUiState()
+
     data class Error(val type: ErrorType) : WeatherUiState()
 }

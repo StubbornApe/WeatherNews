@@ -15,8 +15,7 @@ import kotlinx.parcelize.Parcelize
  * @property category   分类（如 "科技" / "汽车" / "AI"）—— 用于分组、过滤
  * @property isTop      是否置顶（true = 顶部显示）
  * @property readCount  阅读量 —— 用于热度排序
- */
-/**
+ *
  * @Parcelize 由 kotlin-parcelize 插件在编译时自动生成:
  *   1) writeToParcel(dest, flags)
  *   2) CREATOR(Parcelable.Creator<News>) 的静态字段
@@ -40,5 +39,5 @@ data class News(
     val readCount: Int = 0,
     // ⭐ Day 15 新增:仿照 Weather.isFromCache 范式
     //   默认 false,NewsRepository 在 catch 分支用 copy(isFromFallback = true) 标记
-    val isFromFallback: Boolean = false
-): Parcelable
+    val isFromFallback: Boolean = false,
+) : Parcelable

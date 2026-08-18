@@ -37,8 +37,12 @@ import com.example.weathernewsapp.model.News
  */
 sealed interface NewsUiState {
     data object Idle : NewsUiState
+
     data object Loading : NewsUiState
+
     data class Success(val newsList: List<News>) : NewsUiState
-    data object Empty : NewsUiState                                       // ⭐ Day 15 新增
+
+    data object Empty : NewsUiState // ⭐ Day 15 新增
+
     data class Error(val type: ErrorType) : NewsUiState
 }
