@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  =====================================================================
+  themes.xml — 应用主题(Theme)定义文件
+  =====================================================================
+  作用:
+    定义 App 的整体外观(状态栏、ActionBar、主色调、按钮样式、涟漪色 ...),
+    在 AndroidManifest.xml 里通过 <application android:theme="@style/Theme.WeatherNewsApp">
+    引用,从而"全局生效"。
+
+  为什么 res/ 下会同时出现两个 themes.xml?
+    - values/themes.xml         → 浅色 (Light) 主题
+    - values-night/themes.xml   → 深色 (Dark) 主题(系统切黑夜模式自动生效)
+    两个文件里 <style name="..."> 必须同名,Android 会按当前系统模式自动选取。
+
+  为什么 Android Studio 生成的模板要拆成 "Base.Theme.xxx" 和 "Theme.xxx" 两层?
+    - Base.Theme.xxx  → 存放跨模式共享的 style item(浅/深都一样的部分)
+    - Theme.xxx       → 继承 Base,让 values-night/themes.xml 里可以覆写少量条目
+      而不用重新写全部 item。这是"模板方法"式的分层结构。
+-->
+
+<!--
+  xmlns:tools 命名空间:
+    - 只在设计时有效,不打包进 APK,不影响运行行为
+    - 通常和 tools:targetApi、tools:ignore 之类的属性配合使用
+    - 这里默认加上,方便后面主题里如果需要"忽略某属性 Lint 报错"时能写 tools:ignore
+-->
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      Base.Theme.WeatherNewsApp — 基础主题(共享层)
+      ==================================================================
+      style 属性说明:
+      - name       主题名字,后面通过 @style/Base.Theme.WeatherNewsApp 引用
+      - parent     继承的父主题,决定"没有自定义时用什么默认值"
+
+      parent="Theme.Material3.DayNight.NoActionBar" 含义拆解:
+        · Theme.Material3        → 使用 Material 3 (Material You) 视觉规范,
+                                   自 material 库 1.6+ 起提供
+        · .DayNight              → 支持"日/夜"两套主题,系统模式变化时自动切换
+                                   (要求 values-night/ 里也定义了同名 style)
+        · .NoActionBar           → 不使用系统自带的 ActionBar(标题栏)
+                                   现代 App 通常用 Toolbar 或 Compose 顶栏替代,
+                                   所以模板默认关掉
+
+      下面被注释掉的 <item name="colorPrimary"> 就是"想自定义时"的例子:
+        · colorPrimary   → 主色(顶栏底色、按钮底色等的默认色)
+        · colorOnPrimary → 主色上的文字/图标颜色
+        · colorSecondary → 强调色(FAB 等)
+      取消注释并改成你自己的颜色资源即可覆盖 Material 默认值。
+    -->
+    <style name="Base.Theme.WeatherNewsApp" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- 在这里自定义"浅色主题"(以及所有模式共享的样式) -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <!-- <item name="colorOnPrimary">@color/white</item> -->
+        <!-- <item name="android:statusBarColor">?attr/colorPrimary</item> -->
+    </style>
+
+    <!--
+      Theme.WeatherNewsApp — 实际引用主题(应用层)
+      ==================================================================
+      直接继承 Base 主题,不加任何覆写 —— 这样浅色模式就完全按 Base 走。
+
+      为什么还要多这一层空壳 style?
+        因为 values-night/themes.xml 里同样有一个 <style name="Theme.WeatherNewsApp">,
+        但它 parent 指向的是 Base 深色版本或直接覆写少量 item(比如夜间的 statusBar)。
+        Manifest 只需引用 Theme.WeatherNewsApp 这一个名字,
+        Android 根据日/夜模式自动挑选到对应文件下的定义 → 实现无缝切换。
+
+      AndroidManifest.xml 里对应写法:
+        <application
+            android:theme="@style/Theme.WeatherNewsApp"
+            ...>
+    -->
+    <style name="Theme.WeatherNewsApp" parent="Base.Theme.WeatherNewsApp" />
+
+</resources>
