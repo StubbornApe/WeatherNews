@@ -12,6 +12,33 @@ import com.example.weathernewsapp.di.TianApiKey
 import com.example.weathernewsapp.model.News
 import javax.inject.Inject
 
+/**
+ * 新闻数据 Repository,网络优先 + 失败 fallback 假数据。
+ *
+ * ## 数据流
+ * ```
+ * API 请求
+ *   ├─ 成功 → 解析 → 返回 Success(数据)
+ *   └─ 失败 → 返回 Success(FakeNewsData.fallbackList) + 日志提示
+ *             (不返回 Error,因为有降级数据,UI 仍可显示)
+ * ```
+ *
+ * ## 与 WeatherRepository 的差异
+ * - 新闻**没有** Room 缓存(只缓存内存中最新结果),断网直接降级到假数据
+ * - 失败策略不同:天气是"网络失败 → 读 Room → 仍失败才返回 Error"
+ *               新闻是"网络失败 → 立刻返回假数据 Success"
+ *
+ * ## API Key 注入
+ * 通过 `@TianApiKey` 注解的 String 拿到 BuildConfig.TIANAPI_KEY,
+ * 避免 Repository 直接依赖 BuildConfig(测试时更容易 mock)。
+ *
+ * ## Fallback 设计权衡
+ * 优点:用户永远看到内容,体验不中断
+ * 缺点:失败时用户不知道"显示的是假数据",目前通过 UI 顶部 banner("⚠️ 网络异常,已显示缓存数据")提示
+ *
+ * @see WeatherRepository 类似模式,带 Room 缓存
+ * @see FakeNewsData 降级数据源
+ */
 class NewsRepository
     @Inject
     constructor(
