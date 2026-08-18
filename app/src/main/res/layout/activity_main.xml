@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ═══════════════════════════════════════════════════════════════
+  activity_main.xml —— MainActivity 布局:纯宿主
+  ═══════════════════════════════════════════════════════════════
+
+  【结构】上下两块用 ConstraintLayout 堆叠:
+    ┌───────────────────────────────────────┐
+    │                                       │
+    │   FragmentContainerView               │
+    │   (NavHostFragment)                   │  ← 上方:显示当前 Fragment 的 View
+    │   高度 = 剩余空间(match_constraint)   │
+    │                                       │
+    ├───────────────────────────────────────┤
+    │   BottomNavigationView                │  ← 下方:3 个 Tab
+    │   高度 = wrap_content                 │
+    └───────────────────────────────────────┘
+
+  【4 个关键属性(必背)】
+    1) 容器为什么用 <androidx.fragment.app.FragmentContainerView>
+       而不是 <fragment>?
+       —— 老式 <fragment> 标签在 Android Jetpack 时代已被官方 deprecated,
+          它绕过 FragmentManager 事务系统,导致:
+          · 回退栈丢失
+          · savedInstanceState 恢复错乱
+          · 与 Navigation 组件不兼容
+          FragmentContainerView 是 androidx.fragment 1.2+ 提供的替代品,
+          内部走标准 FragmentTransaction,完美支持所有场景。
+
+    2) android:name="androidx.navigation.fragment.NavHostFragment"
+       —— 告诉 FragmentContainerView:你不是"随便装个 Fragment",而是要
+          装一个 NavHostFragment(Navigation 组件的宿主)。运行时会自动
+          new 一个 NavHostFragment 实例塞进来。
+
+    3) app:defaultNavHost="true"
+       —— 把这个 NavHost 注册为"默认 NavHost",让系统返回键
+          (OnBackPressedDispatcher)优先交给 NavController 处理:
+          · 若当前 destination ≠ startDestination:退栈到上一个 destination
+          · 若已在 startDestination:按返回退出 Activity
+          少了这行,返回键会直接退出 Activity,失去 Navigation 的回退栈。
+
+    4) app:navGraph="@navigation/nav_graph"
+       —— 绑定 3.2 节创建的导航图。NavHostFragment 启动时会读取此图,
+          切换到 startDestination 指向的 Fragment(本项目 = newsFragment)。
+
+  【BottomNavigationView 关键属性】
+    app:menu           = 引用 3.1 创建的菜单文件(定义 3 个 Tab)
+    app:itemIconTint   = 图标颜色 selector(选中/未选中态)
+    app:itemTextColor  = 文字颜色 selector(通常与图标同色)
+    app:labelVisibilityMode="labeled"
+                       = 强制所有 Tab 的 title 都常显(3 个 item 时默认行为)
+
+  【ConstraintLayout 约束链】
+    NavHostFragment top-bottom 拉满,bottom 约束到 bottomNav 顶部;
+    bottomNav 约束到 parent 底部,占据一行高度。
+    → 保证内容区自适应剩余空间,底部导航栏不会被顶飞。
+
+  【为什么不用 LinearLayout?】
+    LinearLayout(vertical) + layout_weight=1 也能达到同样效果,但
+    ConstraintLayout 性能略优(层级扁平),而且约束表达力更强(未来
+    加浮动按钮 / SnackBar 时不用改父布局)。
+
+  【小知识:0dp 的含义】
+    0dp 是 ConstraintLayout 的"match_constraint"魔法值,表示
+    "由约束决定我的尺寸,把两边拉满"。不能写 match_parent ——
+    那样在 ConstraintLayout 里会被系统当成 wrap_content。
+-->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mainRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <!-- ① 上方:NavHost,占据 bottomNav 以上的所有空间 -->
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/navHostFragment"
+        android:name="androidx.navigation.fragment.NavHostFragment"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:defaultNavHost="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottomNav"
+        app:navGraph="@navigation/nav_graph" />
+
+    <!-- ② 下方:底部导航栏,固定在屏幕底部 -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNav"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:itemIconTint="@color/bottom_nav_item_color"
+        app:itemTextColor="@color/bottom_nav_item_color"
+        app:labelVisibilityMode="labeled"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:menu="@menu/bottom_nav_menu" />
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ═══════════════════════════════════════════════════════════════
+  fragment_news.xml —— 新闻列表 Fragment 的布局(Day 15 五态版)
+  ═══════════════════════════════════════════════════════════════
+
+  【文件位置】res/layout/fragment_news.xml
+  【被谁 inflate】NewsFragment(通过主构造 Fragment(R.layout.fragment_news))
+
+  【Day 15 改造】
+    原布局是 Day 13 三态版(列表/加载/错误),现在加第 4 个:空态。
+    外面 FrameLayout 叠四层:
+      ① recyclerView    列表(正常态)
+      ② progressBar     加载中转圈(默认 gone)
+      ③ errorContainer  错误提示 + 重试按钮(默认 gone)
+      ④ emptyContainer  暂无数据占位(默认 gone)  ← Day 15 新增
+    四者默认都 gone,运行时由 NewsFragment 根据 5 态切可见性。
+
+  【关键属性】
+    所有 id 与 NewsFragment 的 findViewById 严格一致,id 不可改名。
+-->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/card_bg">
+
+    <!-- ⭐ Day 15 修复:tvOfflineBanner 必须放在 RecyclerView 之后,
+         否则会被 RecyclerView 盖住(FrameLayout 后添加的子元素绘制在上层) -->
+    <!-- ⭐ Day 15 挑战 4 改造:RecyclerView 包进 SwipeRefreshLayout(srlNews)
+         下拉刷新区域只覆盖列表本身,banner/progressBar/error/empty 仍由
+         FrameLayout 根管理,与下拉手势不冲突。RecyclerView 的 id 保持不变。 -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/srlNews"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            tools:listitem="@layout/item_news"/>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- ⭐ Day 15 修复:tvOfflineBanner 必须在 RecyclerView 之后,
+         这样 FrameLayout 会把它绘制在最上层(不会被 RecyclerView 遮住)。
+         layout_gravity="top" 让 banner 浮在列表顶部。
+         默认 gone 状态不占空间,列表完全可见;VISIBLE 时浮在顶部 ~48dp。 -->
+    <TextView
+        android:id="@+id/tvOfflineBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:background="#FFF3E0"
+        android:padding="12dp"
+        android:text="@string/news_fallback_banner"
+        android:textColor="#E65100"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/errorContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvError"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="加载失败"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/btnRetry"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/news_retry" />
+    </LinearLayout>
+
+    <!-- ⭐ Day 15 新增:空态占位(服务器响应成功但新闻列表为空) -->
+    <LinearLayout
+        android:id="@+id/emptyContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/news_empty_title"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/news_empty_subtitle"
+            android:textSize="14sp"
+            android:textColor="?android:attr/textColorSecondary" />
+
+        <!-- ⭐ Day 15 修复(原文档遗漏):空态也提供"重试"按钮,
+             允许用户主动重新加载(空态可能是临时性的:换频道、刚发新闻) -->
+        <Button
+            android:id="@+id/btnRetryEmpty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/news_retry" />
+    </LinearLayout>
+
+</FrameLayout>
