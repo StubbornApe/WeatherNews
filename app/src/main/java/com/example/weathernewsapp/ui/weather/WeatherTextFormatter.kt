@@ -18,7 +18,6 @@ import kotlin.math.round
  *   3. 方便单元测试——纯 Kotlin 类,不需要 Android 依赖
  */
 object WeatherTextFormatter {
-
     /**
      * 摄氏度 → 华氏度.
      * 公式: F = C × 9/5 + 32
@@ -41,9 +40,13 @@ object WeatherTextFormatter {
      * @param unit 用户选择的温度单位(CELSIUS / FAHRENHEIT)
      * @return 如 "23.5°C" 或 "74.3°F"
      */
-    fun formatTemperature(celsius: Double, unit: TempUnit): String = when (unit) {
-        // when 表达式穷举枚举,编译器检查是否漏了分支
-        TempUnit.CELSIUS    -> "${celsius.roundTo1()}°C"
-        TempUnit.FAHRENHEIT -> "${celsius.toFahrenheit().roundTo1()}°F"
-    }
+    fun formatTemperature(
+        celsius: Double,
+        unit: TempUnit,
+    ): String =
+        when (unit) {
+            // when 表达式穷举枚举,编译器检查是否漏了分支
+            TempUnit.CELSIUS -> "${celsius.roundTo1()}°C"
+            TempUnit.FAHRENHEIT -> "${celsius.toFahrenheit().roundTo1()}°F"
+        }
 }

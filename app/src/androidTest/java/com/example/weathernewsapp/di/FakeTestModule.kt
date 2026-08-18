@@ -20,11 +20,10 @@ import javax.inject.Singleton
  */
 @TestInstallIn(
     components = [SingletonComponent::class],
-    replaces = [AppModule::class]
+    replaces = [AppModule::class],
 )
 @Module
 object FakeTestModule {
-
     @Provides
     @Singleton
     fun provideWeatherApi(): WeatherApi = FakeWeatherApi
@@ -47,17 +46,18 @@ object FakeTestModule {
     @Provides
     @Singleton
     fun provideSettingsDataStore(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
     ): SettingsDataStore = SettingsDataStore(context)
 
     // 内存 Room:测试用,不落盘,隔离且快
     @Provides
     @Singleton
     fun provideAppDatabase(
-        @ApplicationContext context: Context
-    ): AppDatabase = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
-        .allowMainThreadQueries()
-        .build()
+        @ApplicationContext context: Context,
+    ): AppDatabase =
+        Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
+            .allowMainThreadQueries()
+            .build()
 
     @Provides
     @Singleton

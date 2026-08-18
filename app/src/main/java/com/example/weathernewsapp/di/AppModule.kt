@@ -22,7 +22,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
-
     private const val WEATHER_BASE_URL = "https://api.open-meteo.com/"
     private const val NEWS_BASE_URL = "https://api.tianapi.com/"
 
@@ -43,7 +42,7 @@ object AppModule {
                     addInterceptor(
                         HttpLoggingInterceptor().apply {
                             level = HttpLoggingInterceptor.Level.BODY
-                        }
+                        },
                     )
                 }
             }
@@ -71,20 +70,23 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideWeatherApi(@WeatherRetrofit retrofit: Retrofit): WeatherApi =
-        retrofit.create(WeatherApi::class.java)
+    fun provideWeatherApi(
+        @WeatherRetrofit retrofit: Retrofit,
+    ): WeatherApi = retrofit.create(WeatherApi::class.java)
 
     @Provides
     @Singleton
-    fun provideNewsApi(@NewsRetrofit retrofit: Retrofit): NewsApi =
-        retrofit.create(NewsApi::class.java)
+    fun provideNewsApi(
+        @NewsRetrofit retrofit: Retrofit,
+    ): NewsApi = retrofit.create(NewsApi::class.java)
 
     // ── 本地存储层 ─────────────────────────────────────────
 
     @Provides
     @Singleton
-    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase =
-        AppDatabase.getInstance(context)
+    fun provideAppDatabase(
+        @ApplicationContext context: Context,
+    ): AppDatabase = AppDatabase.getInstance(context)
 
     @Provides
     @Singleton
@@ -93,7 +95,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideSettingsDataStore(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
     ): SettingsDataStore = SettingsDataStore(context)
 
     // ── 配置项(用 @Qualifier 区分两个 String)──────────────

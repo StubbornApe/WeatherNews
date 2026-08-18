@@ -13,16 +13,15 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import kotlinx.coroutines.launch
 import com.example.weathernewsapp.NewsDetailActivity
 import com.example.weathernewsapp.R
 import com.example.weathernewsapp.adapter.NewsAdapter
 import com.example.weathernewsapp.common.LifecycleLoggingFragment
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class NewsFragment : LifecycleLoggingFragment(R.layout.fragment_news) {
-
     private val viewModel: NewsViewModel by viewModels()
 
     private var recyclerView: RecyclerView? = null
@@ -30,13 +29,16 @@ class NewsFragment : LifecycleLoggingFragment(R.layout.fragment_news) {
     private var errorContainer: View? = null
     private var tvError: TextView? = null
     private var btnRetry: Button? = null
-    private var btnRetryEmpty: Button? = null   // ⭐ Day 15 修复:空态的重试按钮(原文档遗漏)
-    private var emptyContainer: View? = null       // ⭐ Day 15 新增
-    private var tvOfflineBanner: TextView? = null  // ⭐ Day 15 新增:网络异常 fallback banner
-    private var srlNews: SwipeRefreshLayout? = null    // ⭐ Day 15 挑战 4:下拉刷新容器
+    private var btnRetryEmpty: Button? = null // ⭐ Day 15 修复:空态的重试按钮(原文档遗漏)
+    private var emptyContainer: View? = null // ⭐ Day 15 新增
+    private var tvOfflineBanner: TextView? = null // ⭐ Day 15 新增:网络异常 fallback banner
+    private var srlNews: SwipeRefreshLayout? = null // ⭐ Day 15 挑战 4:下拉刷新容器
     private var adapter: NewsAdapter? = null
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
         super.onViewCreated(view, savedInstanceState)
 
         recyclerView = view.findViewById(R.id.recyclerView)
@@ -44,19 +46,20 @@ class NewsFragment : LifecycleLoggingFragment(R.layout.fragment_news) {
         errorContainer = view.findViewById(R.id.errorContainer)
         tvError = view.findViewById(R.id.tvError)
         btnRetry = view.findViewById(R.id.btnRetry)
-        emptyContainer = view.findViewById(R.id.emptyContainer)   // ⭐ Day 15 新增
-        btnRetryEmpty = view.findViewById(R.id.btnRetryEmpty)    // ⭐ Day 15 修复
-        tvOfflineBanner = view.findViewById(R.id.tvOfflineBanner)  // ⭐ Day 15 新增
-        srlNews = view.findViewById(R.id.srlNews)                  // ⭐ 挑战 4
+        emptyContainer = view.findViewById(R.id.emptyContainer) // ⭐ Day 15 新增
+        btnRetryEmpty = view.findViewById(R.id.btnRetryEmpty) // ⭐ Day 15 修复
+        tvOfflineBanner = view.findViewById(R.id.tvOfflineBanner) // ⭐ Day 15 新增
+        srlNews = view.findViewById(R.id.srlNews) // ⭐ 挑战 4
 
         recyclerView?.layoutManager = LinearLayoutManager(requireContext())
-        adapter = NewsAdapter(emptyList()) { news ->
-            startActivity(NewsDetailActivity.newIntent(requireContext(), news))
-        }
+        adapter =
+            NewsAdapter(emptyList()) { news ->
+                startActivity(NewsDetailActivity.newIntent(requireContext(), news))
+            }
         recyclerView?.adapter = adapter
 
         btnRetry?.setOnClickListener { viewModel.retry() }
-        btnRetryEmpty?.setOnClickListener { viewModel.retry() }   // ⭐ Day 15 修复:空态也调同一个 retry
+        btnRetryEmpty?.setOnClickListener { viewModel.retry() } // ⭐ Day 15 修复:空态也调同一个 retry
 
         // ⭐ 挑战 4:下拉手势 → refresh() 通道(viewModel.refresh())
         //   ⭐ Bug 修复:与 btnRetry / btnRetryEmpty 区分——
@@ -65,8 +68,8 @@ class NewsFragment : LifecycleLoggingFragment(R.layout.fragment_news) {
         srlNews?.setOnRefreshListener { viewModel.refresh() }
 
         observeUiState()
-        observeEvents()    // ⭐ Day 15 新增
-        observeRefreshing()    // ⭐ 挑战 4
+        observeEvents() // ⭐ Day 15 新增
+        observeRefreshing() // ⭐ 挑战 4
     }
 
     private fun observeUiState() {
@@ -80,11 +83,12 @@ class NewsFragment : LifecycleLoggingFragment(R.layout.fragment_news) {
     private fun render(state: NewsUiState) {
         when (state) {
             NewsUiState.Idle,
-            NewsUiState.Loading -> {
+            NewsUiState.Loading,
+            -> {
                 // Idle 和 Loading 渲染一样:转圈
                 recyclerView?.visibility = View.GONE
                 errorContainer?.visibility = View.GONE
-                emptyContainer?.visibility = View.GONE          // ⭐ Day 15 新增
+                emptyContainer?.visibility = View.GONE // ⭐ Day 15 新增
                 progressBar?.visibility = View.VISIBLE
                 // ⭐ Bug 修复:Loading 时清空 banner,避免视觉残留"已显示缓存数据"
                 //   仅在 retry() 按钮触发的 Loading 才会进到这里(refresh() 不进)
@@ -103,7 +107,7 @@ class NewsFragment : LifecycleLoggingFragment(R.layout.fragment_news) {
                 val showFallbackBanner = state.newsList.any { it.isFromFallback }
                 tvOfflineBanner?.visibility = if (showFallbackBanner) View.VISIBLE else View.GONE
             }
-            NewsUiState.Empty -> {                              // ⭐ Day 15 新增
+            NewsUiState.Empty -> { // ⭐ Day 15 新增
                 progressBar?.visibility = View.GONE
                 recyclerView?.visibility = View.GONE
                 errorContainer?.visibility = View.GONE
@@ -155,17 +159,16 @@ class NewsFragment : LifecycleLoggingFragment(R.layout.fragment_news) {
         }
     }
 
-
     override fun onDestroyView() {
         recyclerView = null
         progressBar = null
         errorContainer = null
         tvError = null
         btnRetry = null
-        btnRetryEmpty = null    // ⭐ Day 15 修复
-        emptyContainer = null    // ⭐ Day 15 新增
-        tvOfflineBanner = null    // ⭐ Day 15 新增
-        srlNews = null            // ⭐ 挑战 4
+        btnRetryEmpty = null // ⭐ Day 15 修复
+        emptyContainer = null // ⭐ Day 15 新增
+        tvOfflineBanner = null // ⭐ Day 15 新增
+        srlNews = null // ⭐ 挑战 4
         adapter = null
         super.onDestroyView()
     }

@@ -40,23 +40,12 @@ import com.example.weathernewsapp.data.local.entity.WeatherEntity
  *   你的子类只需要声明"我有什么表、有哪些 DAO",其它都由基类 + KSP 生成代码处理。
  * ═══════════════════════════════════════════════════════════════════════════
  */
-
-// @Database:标记这是一个 Room 数据库类
-//   · entities:数组,列出库里所有"表对应的 Entity 类"。Room 会在首次打开库时
-//                根据这些 Entity 的 @Entity / @ColumnInfo 注解自动 CREATE TABLE。
-//                今天只有 WeatherEntity 一张表;以后加表就在这里加 NewEntity::class,
-//                同时 version +1 并写 Migration。
-//   · version:数据库版本号,整数递增。你每次改 Entity(加字段/加表)都得 +1,
-//              否则 App 升级时老用户设备上的旧库结构和新代码不匹配,会崩。
-//   · exportSchema = true:让 Room 把每个版本的 schema(表结构 JSON)导出到
-//                          ksp 指定的 app/schemas/ 目录,便于测试/迁移验证。
 @Database(
     entities = [WeatherEntity::class],
     version = 2,
-    exportSchema = true
+    exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
-
     // ⭐ 抽象函数:拿到天气表的 DAO
     //
     // 【为什么没有方法体?】
@@ -84,7 +73,6 @@ abstract class AppDatabase : RoomDatabase() {
     //   Kotlin 没有 static 关键字,要写"类级别的静态成员"就用 companion object { }。
     //   里面的属性/方法可以通过 AppDatabase.getInstance(...) 直接调用,无需实例。
     companion object {
-
         // ⭐ 单例实例变量
         //
         // 【@Volatile 是干嘛的?】
@@ -101,7 +89,7 @@ abstract class AppDatabase : RoomDatabase() {
         //   这里没写 set,但因为是 private var,只有本类能修改。
         //   外部只能通过 getInstance() 访问,不能直接 INSTANCE = xxx。
         @Volatile
-        private var INSTANCE: AppDatabase? = null
+        private var dbInstance: AppDatabase? = null
 
         /**
          * 获取数据库单例。线程安全。
@@ -129,7 +117,6 @@ abstract class AppDatabase : RoomDatabase() {
          * @return 全局唯一的 AppDatabase 实例
          */
         fun getInstance(context: Context): AppDatabase {
-
             // ── 第一次检查:已经有实例就直接返回,无锁,快 ──────────────
             // INSTANCE?.let { return it } 的含义:
             //   · 如果 INSTANCE != null,执行 let 块(把非空值作为 it),
@@ -137,7 +124,7 @@ abstract class AppDatabase : RoomDatabase() {
             //   · 如果 INSTANCE == null,什么都不做,继续往下走
             //
             // 这是"快速路径":99% 的调用都在这里命中,不会进入同步块。
-            INSTANCE?.let { return it }
+            dbInstance?.let { return it }
 
             // ── 进入同步块 ─────────────────────────────────────────────
             // synchronized(this):以 AppDatabase.companion 的类对象为锁。
@@ -148,9 +135,8 @@ abstract class AppDatabase : RoomDatabase() {
             //   · 线程 B 进入 synchronized,此时第二次检查发现 INSTANCE != null
             //     → 不创建新实例,直接复用线程 A 创建的实例 ✓
             return synchronized(this) {
-
                 // ── 第二次检查:等锁期间可能别的线程已经建好了 ──────────
-                val existing = INSTANCE
+                val existing = dbInstance
                 if (existing != null) {
                     // 已有实例(等锁时别的线程建的),直接返回
                     existing
@@ -173,35 +159,35 @@ abstract class AppDatabase : RoomDatabase() {
                     // 参数 3:"weather.db"
                     //   数据库文件名,存到 /data/data/com.example.weathernewsapp/databases/weather.db
                     //   可以随便起名,Database Inspector 里看到的就是这个文件名。
-                    val instance = Room.databaseBuilder(
-                        context.applicationContext,
-                        AppDatabase::class.java,
-                        "weather.db"
-                    )
-                        // ⭐ fallbackToDestructiveMigration() —— 开发期策略,上线前必须换!
-                        //
-                        // 什么时候触发?
-                        //   你改了 Entity(加了个字段)/加了张表,把 version 从 1 改成 2,
-                        //   但没有提供 Migration(1,2) 告诉 Room"旧库怎么改成新结构",
-                        //   默认情况下 Room 会崩:
-                        //     "IllegalStateException: Migration didn't handle..."
-                        //
-                        // 加了这一行后,Room 遇到版本不匹配时会:
-                        //   1. DROP 所有旧表(用户数据全部丢失!)
-                        //   2. 按新 Entity 重新 CREATE TABLE
-                        //   3. App 正常启动(但是数据是空的)
-                        //
-                        // 开发阶段很方便:改了 Entity 不用写迁移,卸了重装也行。
-                        // ⚠️ 生产上线必须去掉这一行,改用 .addMigrations(MIGRATION_1_2, ...),
-                        //    否则用户升级 App 后缓存数据全丢,体验非常糟糕。
-                        .fallbackToDestructiveMigration()
+                    val instance =
+                        Room.databaseBuilder(
+                            context.applicationContext,
+                            AppDatabase::class.java,
+                            "weather.db",
+                        )
+                            // ⭐ fallbackToDestructiveMigration() —— 开发期策略,上线前必须换!
+                            //
+                            // 什么时候触发?
+                            //   你改了 Entity(加了个字段)/加了张表,把 version 从 1 改成 2,
+                            //   但没有提供 Migration(1,2) 告诉 Room"旧库怎么改成新结构",
+                            //   默认情况下 Room 会崩:
+                            //     "IllegalStateException: Migration didn't handle..."
+                            //
+                            // 加了这一行后,Room 遇到版本不匹配时会:
+                            //   1. DROP 所有旧表(用户数据全部丢失!)
+                            //   2. 按新 Entity 重新 CREATE TABLE
+                            //   3. App 正常启动(但是数据是空的)
+                            //
+                            // 开发阶段很方便:改了 Entity 不用写迁移,卸了重装也行。
+                            // ⚠️ 生产上线必须去掉这一行,改用 .addMigrations(MIGRATION_1_2, ...),
+                            //    否则用户升级 App 后缓存数据全丢,体验非常糟糕。
+                            .fallbackToDestructiveMigration()
+                            // build():执行建库操作(如果是首次创建,就在这里 CREATE TABLE),
+                            // 返回一个 AppDatabase_Impl 实例(即 AppDatabase 的子类)。
+                            .build()
 
-                        // build():执行建库操作(如果是首次创建,就在这里 CREATE TABLE),
-                        // 返回一个 AppDatabase_Impl 实例(即 AppDatabase 的子类)。
-                        .build()
-
-                    // 把新实例存到 @Volatile 的 INSTANCE 字段,下次调用走快速路径。
-                    INSTANCE = instance
+                    // 把新实例存到 @Volatile 的 dbInstance 字段,下次调用走快速路径。
+                    dbInstance = instance
 
                     // 同步块最后一行表达式自动作为返回值,返回给外层的 return synchronized(...)
                     instance

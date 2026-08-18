@@ -5,8 +5,8 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.weathernewsapp.data.model.TempUnit
@@ -64,19 +64,8 @@ import java.io.IOException
  *   · 主线程只负责 collect,不阻塞
  * ═══════════════════════════════════════════════════════════════════════════
  */
-
-// ⭐ 顶层扩展属性:全 App 唯一的 DataStore<Preferences> 实例
-//
-// 【为什么定义在文件顶层而不是类里面?】
-//   preferencesDataStore 是一个属性委托工厂,它必须作为
-//   Context 的扩展属性存在(Kotlin 委托属性的要求)。
-//   定义在顶层让整个 App 共享同一个实例,避免多实例冲突。
-//
-// 【为什么是 private?】
-//   只在本文件内使用,外部通过 SettingsDataStore 类间接访问,
-//   不允许外部直接操作 dataStore.edit { }(否则绕过了我们的类型安全封装)。
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
-    name = "settings"   // 文件名 → /files/datastore/settings.preferences_pb
+    name = "settings",
 )
 
 /**
@@ -90,19 +79,16 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
 data class UserSettings(
     /** 默认城市名,如 "北京" */
     val defaultCity: String,
-
     /** 是否深色模式 */
     val darkMode: Boolean,
-
     /** 温度单位 */
-    val tempUnit: TempUnit
+    val tempUnit: TempUnit,
 )
 
 class SettingsDataStore(
     // 传入 Context(建议传 applicationContext,避免内存泄漏)
-    private val context: Context
+    private val context: Context,
 ) {
-
     // ═══════════════════════════════════════════════════════════════════════
     //  Preferences Keys —— 类型安全的键定义
     // ═══════════════════════════════════════════════════════════════════════
@@ -121,8 +107,8 @@ class SettingsDataStore(
 
     private companion object Keys {
         val DEFAULT_CITY = stringPreferencesKey("default_city")
-        val DARK_MODE    = booleanPreferencesKey("dark_mode")
-        val TEMP_UNIT    = intPreferencesKey("temp_unit")
+        val DARK_MODE = booleanPreferencesKey("dark_mode")
+        val TEMP_UNIT = intPreferencesKey("temp_unit")
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -134,8 +120,8 @@ class SettingsDataStore(
 
     object Defaults {
         const val DEFAULT_CITY = "北京"
-        const val DARK_MODE = false            // 默认浅色
-        val TEMP_UNIT = TempUnit.CELSIUS      // 默认摄氏度
+        const val DARK_MODE = false // 默认浅色
+        val TEMP_UNIT = TempUnit.CELSIUS // 默认摄氏度
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -161,55 +147,59 @@ class SettingsDataStore(
      * 发射 emptyPreferences() 让上层拿到默认值而不是崩溃。
      * 非 IOException(如 CancellationException)继续抛出。
      */
-    val settingsFlow: Flow<UserSettings> = context.dataStore.data
-        .catch { e ->
-            if (e is IOException) {
-                // 文件读取异常时发出空 Preferences,后续 map 会用默认值填充
-                emit(emptyPreferences())
-            } else {
-                throw e   // 其他异常(如协程取消)不能吞
+    val settingsFlow: Flow<UserSettings> =
+        context.dataStore.data
+            .catch { e ->
+                if (e is IOException) {
+                    // 文件读取异常时发出空 Preferences,后续 map 会用默认值填充
+                    emit(emptyPreferences())
+                } else {
+                    throw e // 其他异常(如协程取消)不能吞
+                }
             }
-        }
-        .map { prefs ->
-            UserSettings(
-                defaultCity = prefs[DEFAULT_CITY] ?: Defaults.DEFAULT_CITY,
-                darkMode    = prefs[DARK_MODE] ?: Defaults.DARK_MODE,
-                tempUnit    = TempUnit.fromOrdinal(prefs[TEMP_UNIT])
-            )
-        }
+            .map { prefs ->
+                UserSettings(
+                    defaultCity = prefs[DEFAULT_CITY] ?: Defaults.DEFAULT_CITY,
+                    darkMode = prefs[DARK_MODE] ?: Defaults.DARK_MODE,
+                    tempUnit = TempUnit.fromOrdinal(prefs[TEMP_UNIT]),
+                )
+            }
 
     // ─────────────────────────────────────────────────────────────────────
     //  单项 Flow(如果某处只关心一个偏好,可以用这些,不用 collect 全量)
     // ─────────────────────────────────────────────────────────────────────
 
     /** 默认城市的响应式流 */
-    val defaultCityFlow: Flow<String> = context.dataStore.data
-        .catch { e ->
-            if (e is IOException) emit(emptyPreferences()) else throw e
-        }
-        .map { it[DEFAULT_CITY] ?: Defaults.DEFAULT_CITY }
-        // ⭐ Day 12 修复:只在城市真正变化时才发射。
-        //   dataStore.data 在"任意 key"变化时都会把整个 Preferences 重发一次,
-        //   导致切温度单位/深色模式也会让 defaultCityFlow 发射相同的城市名,
-        //   进而触发 ViewModel 的 combine → collectLatest 重新请求网络。
-        //   distinctUntilChanged() 过滤连续相等的值,从源头杜绝无关刷新。
-        .distinctUntilChanged()
+    val defaultCityFlow: Flow<String> =
+        context.dataStore.data
+            .catch { e ->
+                if (e is IOException) emit(emptyPreferences()) else throw e
+            }
+            .map { it[DEFAULT_CITY] ?: Defaults.DEFAULT_CITY }
+            // ⭐ Day 12 修复:只在城市真正变化时才发射。
+            //   dataStore.data 在"任意 key"变化时都会把整个 Preferences 重发一次,
+            //   导致切温度单位/深色模式也会让 defaultCityFlow 发射相同的城市名,
+            //   进而触发 ViewModel 的 combine → collectLatest 重新请求网络。
+            //   distinctUntilChanged() 过滤连续相等的值,从源头杜绝无关刷新。
+            .distinctUntilChanged()
 
     /** 深色模式的响应式流 */
-    val darkModeFlow: Flow<Boolean> = context.dataStore.data
-        .catch { e ->
-            if (e is IOException) emit(emptyPreferences()) else throw e
-        }
-        .map { it[DARK_MODE] ?: Defaults.DARK_MODE }
-        .distinctUntilChanged()
+    val darkModeFlow: Flow<Boolean> =
+        context.dataStore.data
+            .catch { e ->
+                if (e is IOException) emit(emptyPreferences()) else throw e
+            }
+            .map { it[DARK_MODE] ?: Defaults.DARK_MODE }
+            .distinctUntilChanged()
 
     /** 温度单位的响应式流 */
-    val tempUnitFlow: Flow<TempUnit> = context.dataStore.data
-        .catch { e ->
-            if (e is IOException) emit(emptyPreferences()) else throw e
-        }
-        .map { TempUnit.fromOrdinal(it[TEMP_UNIT]) }
-        .distinctUntilChanged()
+    val tempUnitFlow: Flow<TempUnit> =
+        context.dataStore.data
+            .catch { e ->
+                if (e is IOException) emit(emptyPreferences()) else throw e
+            }
+            .map { TempUnit.fromOrdinal(it[TEMP_UNIT]) }
+            .distinctUntilChanged()
 
     // ═══════════════════════════════════════════════════════════════════════
     //  写:suspend 方法,在协程里调用

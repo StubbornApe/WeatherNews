@@ -1,7 +1,8 @@
 package com.example.weathernewsapp
 
-// ============ import 分区(遵循 Android 官方约定的分组顺序) ============
-// android.*        —— Android SDK 内置类
+// =============================================================================
+//  import 分区(按 ktlint 默认规则:其他 → java.* → javax.* → kotlin.* → aliases)
+// =============================================================================
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.GradientDrawable
@@ -11,22 +12,15 @@ import android.view.View
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.TextView
-// androidx.*       —— AndroidX 兼容库(Jetpack)
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.OnBackPressedCallback           // 现代化的返回处理
-import androidx.appcompat.app.AppCompatActivity         // Activity 基类(带兼容 ActionBar)
-import androidx.core.content.ContextCompat              // 跨版本的资源获取
-import androidx.core.content.IntentCompat               // 跨版本的 Parcelable 取值(关键)
+import androidx.core.content.ContextCompat
+import androidx.core.content.IntentCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.weathernewsapp.common.LifecycleLoggingActivity
-
-// com.google.*     —— 第三方(Material Components)
-import com.google.android.material.appbar.MaterialToolbar
-// 项目内部
 import com.example.weathernewsapp.model.News
-
-
+import com.google.android.material.appbar.MaterialToolbar
 
 /**
  * NewsDetailActivity —— 新闻详情页
@@ -43,7 +37,6 @@ import com.example.weathernewsapp.model.News
  * 输出:全屏展示这条新闻的标题 / 元信息 / 正文
  */
 class NewsDetailActivity : LifecycleLoggingActivity() {
-
     // ═════════════════════════════════════════════════════════════════
     // ① 静态区:Extra key 常量 & 启动器工厂方法
     //    Kotlin 里没有 static,通过 `companion object` 表达"类级别"成员
@@ -68,7 +61,10 @@ class NewsDetailActivity : LifecycleLoggingActivity() {
          * `.apply { ... }` 是 Kotlin 作用域函数:配置对象后返回对象自身,
          *   让代码更紧凑(避免 val i = Intent(); i.putExtra(...); return i 的三行写法)。
          */
-        fun newIntent(context: Context, news: News): Intent =
+        fun newIntent(
+            context: Context,
+            news: News,
+        ): Intent =
             Intent(context, NewsDetailActivity::class.java).apply {
                 // 因为 News 已经用 @Parcelize 实现了 Parcelable,
                 // Intent.putExtra 里可以直接塞进去
@@ -93,7 +89,7 @@ class NewsDetailActivity : LifecycleLoggingActivity() {
             insets
         }
 
-        Log.d("LC", "NewsDetail -> onCreate")   // 生命周期日志,与 MainActivity 用同一 TAG
+        Log.d("LC", "NewsDetail -> onCreate") // 生命周期日志,与 MainActivity 用同一 TAG
 
         // ─────────── 2.1 从 Intent 里安全取出 News ───────────
         // 优先使用 Android 13(API 33)引入的**新签名**:显式传 Class,更类型安全,
@@ -104,11 +100,12 @@ class NewsDetailActivity : LifecycleLoggingActivity() {
         //   ① Intent 里可能没这个 key(调用方漏写);
         //   ② key 冲突导致取值类型不对;
         //   ③ 系统恢复时 Parcelable 反序列化失败(极少见)。
-        val news: News? = IntentCompat.getParcelableExtra(
-            intent,
-            EXTRA_NEWS,
-            News::class.java
-        )
+        val news: News? =
+            IntentCompat.getParcelableExtra(
+                intent,
+                EXTRA_NEWS,
+                News::class.java,
+            )
 
         // ─────────── 2.2 空值兜底 —— 用户体验 vs 直接崩溃 ───────────
         // Elvis + 提前 return:数据缺失时给一个"错误占位",避免直接 NPE 崩溃。
@@ -116,7 +113,7 @@ class NewsDetailActivity : LifecycleLoggingActivity() {
         if (news == null) {
             findViewById<TextView>(R.id.tvDetailTitle).text =
                 getString(R.string.detail_error_missing)
-            return    // 直接结束 onCreate,后续绑定逻辑就不用跑了
+            return // 直接结束 onCreate,后续绑定逻辑就不用跑了
         }
 
         // ─────────── 2.3 绑定顶部标题栏(MaterialToolbar) ───────────
@@ -127,8 +124,8 @@ class NewsDetailActivity : LifecycleLoggingActivity() {
         //   ③ 给箭头设点击回调(与物理返回归一化)
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)   // 显示 ← 箭头
-        supportActionBar?.setDisplayShowHomeEnabled(true)   // 让"Home 按钮区"可交互
+        supportActionBar?.setDisplayHomeAsUpEnabled(true) // 显示 ← 箭头
+        supportActionBar?.setDisplayShowHomeEnabled(true) // 让"Home 按钮区"可交互
         toolbar.setNavigationOnClickListener {
             // "点箭头 = 按物理返回",两条路径归一,行为一致
             onBackPressedDispatcher.onBackPressed()
@@ -148,7 +145,8 @@ class NewsDetailActivity : LifecycleLoggingActivity() {
         //
         // enabled = true 表示"这个回调当前生效";若想暂停,把 isEnabled 设为 false 即可
         onBackPressedDispatcher.addCallback(
-            this,   // LifecycleOwner:回调随 Activity 销毁自动移除,不需要手动 remove
+            // LifecycleOwner:回调随 Activity 销毁自动移除,不需要手动 remove
+            this,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     Log.d("LC", "NewsDetail -> back pressed")
@@ -156,7 +154,7 @@ class NewsDetailActivity : LifecycleLoggingActivity() {
                     // 未来可扩展:如"正文滚动到中段时,先滚回顶部再退出"
                     finish()
                 }
-            }
+            },
         )
     }
 
@@ -168,7 +166,7 @@ class NewsDetailActivity : LifecycleLoggingActivity() {
     // ═════════════════════════════════════════════════════════════════
     override fun onSupportNavigateUp(): Boolean {
         onBackPressedDispatcher.onBackPressed()
-        return true    // 返回 true 表示"我已处理"
+        return true // 返回 true 表示"我已处理"
     }
 
     // ═════════════════════════════════════════════════════════════════
@@ -205,15 +203,16 @@ class NewsDetailActivity : LifecycleLoggingActivity() {
         // ─── 标题 & 正文 ───
         // findViewById<T>(id) 是"泛型版",省去了强转
         findViewById<TextView>(R.id.tvDetailTitle).text = news.title
-        findViewById<TextView>(R.id.tvDetailBody).text  = news.summary
+        findViewById<TextView>(R.id.tvDetailBody).text = news.summary
 
         // ─── 元信息:作者 · 时间 · 阅读量:1.2 万 ───
         // getString(resId, args...) 用占位符格式化,占位符定义在 strings.xml
         // 例:<string name="detail_read_count">阅读量:%1$s</string>
-        val readCountText = getString(
-            R.string.detail_read_count,
-            formatReadCount(news.readCount)
-        )
+        val readCountText =
+            getString(
+                R.string.detail_read_count,
+                formatReadCount(news.readCount),
+            )
         // 字符串模板(string template):Kotlin 用 "$var" / "${expr}" 拼字符串
         findViewById<TextView>(R.id.tvDetailMeta).text =
             "${news.author} · ${news.time} · $readCountText"
@@ -235,12 +234,13 @@ class NewsDetailActivity : LifecycleLoggingActivity() {
         tvCover.text = news.category.take(1)
 
         // when 表达式:根据分类映射到不同的颜色资源 id
-        val colorRes = when (news.category) {
-            "科技" -> R.color.cat_tech
-            "汽车" -> R.color.cat_car
-            "AI"  -> R.color.cat_ai
-            else  -> R.color.cat_default   // else 分支必须有,when 才是"表达式"
-        }
+        val colorRes =
+            when (news.category) {
+                "科技" -> R.color.cat_tech
+                "汽车" -> R.color.cat_car
+                "AI" -> R.color.cat_ai
+                else -> R.color.cat_default // else 分支必须有,when 才是"表达式"
+            }
         // ContextCompat.getColor 用于跨版本安全获取颜色(考虑 API 23+ 的主题色)
         val color = ContextCompat.getColor(this, colorRes)
 
@@ -249,8 +249,8 @@ class NewsDetailActivity : LifecycleLoggingActivity() {
         //    `as?` 安全转换:如果 background 不是 GradientDrawable(如被主题 tint 换掉),
         //    会返回 null,链式 `?.` 后面的 mutate/let 就跳过,不会崩溃。
         (tvCover.background as? GradientDrawable)
-            ?.mutate()                                        // 复制一份 ConstantState
-            ?.let { (it as GradientDrawable).setColor(color) }// 只改这一份
+            ?.mutate() // 复制一份 ConstantState
+            ?.let { (it as GradientDrawable).setColor(color) } // 只改这一份
 
         // ─── 顶部 AppBar 也染成分类色,让详情页有"归属感" ───
         // 这里 findViewById<View> 直接拿到 AppBarLayout(View 的父类可接收所有 View 子类)
@@ -266,11 +266,12 @@ class NewsDetailActivity : LifecycleLoggingActivity() {
     //   - `String.format` 用 Locale-independent 需要显式传 Locale.US,
     //     这里省略了 —— 如果国际化后发现小数点变逗号,改用 Locale.US
     // ═════════════════════════════════════════════════════════════════
-    private fun formatReadCount(count: Int): String = when {
-        count >= 10000 -> String.format("%.1f 万", count / 10000.0)
-        count >= 1000  -> String.format("%.1fk", count / 1000.0)
-        else           -> count.toString()
-    }
+    private fun formatReadCount(count: Int): String =
+        when {
+            count >= 10000 -> String.format("%.1f 万", count / 10000.0)
+            count >= 1000 -> String.format("%.1fk", count / 1000.0)
+            else -> count.toString()
+        }
 
     // ═════════════════════════════════════════════════════════════════
     // 挑战 2 新增:onDestroy —— 释放 WebView,防内存泄漏

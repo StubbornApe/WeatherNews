@@ -29,31 +29,15 @@ import java.io.IOException
  * @param maxDelayMs     单次重试最大等待时间,防止指数增长过大
  * @param factor         每次退避的倍数
  * @param block          实际要执行的 suspend 逻辑
- * @return               成功时的 block 返回值;所有重试都失败则抛出最后一次的异常
+ * @return 成功时的 block 返回值;所有重试都失败则抛出最后一次的异常
  * ═══════════════════════════════════════════════════════════════════════════
  */
-// suspend fun:表示这是一个"可挂起函数"
-//   · 因为内部会调用 delay(...)(也是 suspend 函数),所以必须在协程作用域里调用
-//   · 只能被另一个 suspend fun 或 launch/async 内部调用
-//
-// <T>:泛型类型参数
-//   · block 返回什么类型,retryOnNetworkError 就返回什么类型
-//   · 让本函数可以复用到任何返回值类型(Weather / News / Any)
-//
-// 参数说明:
-//   · times          重试次数(不含第一次)。默认 2 → 最多总共尝试 3 次(1 次原始 + 2 次重试)
-//   · initialDelayMs 首次重试前的等待毫秒数,默认 500ms
-//   · maxDelayMs     单次等待的上限,防止指数增长后等太久,默认 4 秒
-//   · factor         每次等待时间的倍数,默认 2.0(标准的指数退避)
-//   · block          真正要执行的 suspend 函数(比如 api.getCurrentWeather(...))
-//     · 类型 suspend () -> T:表示"一个可挂起的、无参、返回 T 的函数类型"
-//     · 用 lambda 方式调用:retryOnNetworkError { api.getCurrentWeather(...) }
 suspend fun <T> retryOnNetworkError(
     times: Int = 2,
     initialDelayMs: Long = 500,
     maxDelayMs: Long = 4_000,
     factor: Double = 2.0,
-    block: suspend () -> T
+    block: suspend () -> T,
 ): T {
     // var 可变变量:currentDelay 会在每次失败后被更新为"下次要等的时间"
     //   · Long 类型,与 delay(Long) 的参数类型一致
@@ -69,14 +53,12 @@ suspend fun <T> retryOnNetworkError(
             //   · 抛异常 → 进入下面的 catch 分支
             //   · 注意:return 在这里是"从 retryOnNetworkError 返回",不是从 repeat 返回
             return block()
-
         } catch (e: CancellationException) {
             // ⭐ 特例:CancellationException 是协程取消信号,必须原样抛出
             //   · 用户离开页面 / View 销毁 → scope 取消 → block 抛 CancellationException
             //   · 若把它当作错误 delay 重试,协程状态机会被破坏,导致资源无法释放
             //   · throw e 让异常继续向上冒泡,scope 层做正常的取消清理
             throw e
-
         } catch (e: IOException) {
             // ⭐ 只对网络类异常(IOException 及子类)重试
             //   · SocketTimeoutException / UnknownHostException 都是它的子类
@@ -89,7 +71,7 @@ suspend fun <T> retryOnNetworkError(
             //   · attempt + 1:因为 attempt 从 0 开始,展示时 +1 让读日志更直观
             android.util.Log.w(
                 "retryOnNetworkError",
-                "attempt ${attempt + 1}/$times failed: ${e.javaClass.simpleName}, retry in ${currentDelay}ms"
+                "attempt ${attempt + 1}/$times failed: ${e.javaClass.simpleName}, retry in ${currentDelay}ms",
             )
 
             // delay(Long):协程标准库的挂起函数,让当前协程"睡 currentDelay 毫秒"

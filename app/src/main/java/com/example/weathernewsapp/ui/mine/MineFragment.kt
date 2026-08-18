@@ -1,11 +1,11 @@
 package com.example.weathernewsapp.ui.mine
 
 // ============ import 分区(按 Android 官方约定:android → androidx → 项目) ============
-import android.os.Bundle                                           // View 状态保存/恢复入参
-import android.view.View                                           // Fragment 根 View
-import android.widget.TextView                                     // 文本控件(占位文字用)
-import com.example.weathernewsapp.R                                // 资源 id 引用
-import com.example.weathernewsapp.common.LifecycleLoggingFragment  // 生命周期日志基类
+import android.os.Bundle // View 状态保存/恢复入参
+import android.view.View // Fragment 根 View
+import android.widget.TextView // 文本控件(占位文字用)
+import com.example.weathernewsapp.R // 资源 id 引用
+import com.example.weathernewsapp.common.LifecycleLoggingFragment // 生命周期日志基类
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════
@@ -26,12 +26,14 @@ import com.example.weathernewsapp.common.LifecycleLoggingFragment  // 生命周�
  * ═══════════════════════════════════════════════════════════════════════════
  */
 class MineFragment : LifecycleLoggingFragment(R.layout.fragment_placeholder) {
-
     /**
      * View 已 inflate,把占位 TextView 的文本换成"我的 - 开发中"。
      */
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)   // ⚠️ 先调 super,让基类打日志
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
+        super.onViewCreated(view, savedInstanceState) // ⚠️ 先调 super,让基类打日志
 
         // 与 WeatherFragment 唯一的差别:资源 id 换成 placeholder_mine。
         // 这就是"一份布局 + 两个 Fragment 差异化"的最小实现。

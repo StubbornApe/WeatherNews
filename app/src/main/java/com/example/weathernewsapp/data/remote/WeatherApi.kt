@@ -33,7 +33,6 @@ import retrofit2.http.Query
  * ═══════════════════════════════════════════════════════════════════════════
  */
 interface WeatherApi {
-
     /**
      * 获取实况天气。
      *
@@ -52,9 +51,9 @@ interface WeatherApi {
      */
     @GET("v1/forecast")
     suspend fun getCurrentWeather(
-        @Query("latitude")  lat: Double,
+        @Query("latitude") lat: Double,
         @Query("longitude") lng: Double,
-        @Query("current")   current: String,
-        @Query("timezone")  timezone: String
+        @Query("current") current: String,
+        @Query("timezone") timezone: String,
     ): WeatherResponseDto
 }
