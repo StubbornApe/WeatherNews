@@ -56,6 +56,9 @@ android {
         debug {
             // ⭐ Day 17 修复:真正让 debug 变体单元测试开启代码覆盖率(仅 testCoverage{ jacocoVersion } 不会生成覆盖率任务)
             enableUnitTestCoverage = true
+            // ⭐ Day 20 新增:开启设备端(androidTest / connectedDebugAndroidTest)代码覆盖率
+            //   会让 AGP 注册 createDebugAndroidTestCoverageReport 任务,单独产出 UI 测试的报告中
+            enableAndroidTestCoverage = true
         }
         release {
             isMinifyEnabled = false
@@ -145,4 +148,45 @@ dependencies {
     // ⭐ Day 16 新增:单测框架
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
+}
+
+// ⭐ Day 20:合并 "debug 单测 + connected(UI)测试" 覆盖率为一份聚合报告
+//   用法:.\gradlew.bat :app:jacocoMergedDebugReport
+//   输出:app/build/reports/coverage/jacocoMergedDebug/index.html
+//   说明:AGP 内置 createDebugCoverageReport 只分别出单测/UI 两份报告,并不合并;
+//        这里自定义一个 JacocoReport,把 unit 的 .exec 和 androidTest 的 .ec 一起统计。
+tasks.register(
+    "jacocoMergedDebugReport",
+    org.gradle.testing.jacoco.tasks.JacocoReport::class.java,
+) {
+    group = "verification"
+    description = "合并 debug 单测 + connected(UI)测试的 JaCoCo 覆盖率为一份报告"
+
+    // 依赖两个数据源,保证数据最新:
+    //   单测 exec 由 testDebugUnitTest 生成,设备端 .ec 由 createDebugAndroidTestCoverageReport 生成
+    dependsOn("testDebugUnitTest", "createDebugAndroidTestCoverageReport")
+
+    // 1) 执行数据:单测 exec + 设备端 coverage.ec(两者会由 JaCoCo 合并统计)
+    val unitExec = file("build/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+    val androidEc = fileTree("build/outputs/code_coverage/debugAndroidTest/connected") {
+        include("**/*.ec")
+    }
+    executionData(files(unitExec, androidEc))
+
+    // 2) class 产物(要统计的字节码)
+    classDirectories.setFrom(
+        files("build/tmp/kotlin-classes/debug"),
+        files("build/intermediates/javac/debug/compileDebugJavaWithJavac/classes"),
+    )
+
+    // 3) 源码路径
+    sourceDirectories.setFrom(files("src/main/java"))
+
+    // 4) 报告输出到独立目录,避免和 AGP 内置两份混淆
+    reports {
+        html.required.set(true)
+        html.outputLocation.set(layout.buildDirectory.dir("reports/coverage/jacocoMergedDebug"))
+        xml.required.set(false)
+        csv.required.set(false)
+    }
 }
